@@ -204,6 +204,13 @@ namespace arima_kana {
         data = alloc.allocate(_capacity);
       }
 
+      bool find(const T &val) {
+        for (size_t i = 0; i < _size; i++) {
+          if (data[i] == val) return true;
+        }
+        return false;
+      }
+
       ~vector() {
         for (size_t i = 0; i < _size; i++) {
           alloc.destroy(data + i);

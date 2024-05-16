@@ -92,7 +92,7 @@ namespace arima_kana {
         data_filer.close();
       }
 
-      void insert(const K &k, V &v) {
+      void insert(const K &k,const V &v) {
         KV kv = {k, v};
         //std::cout<<tv.key<<tv.pos;
         if (list.empty()) {
@@ -147,20 +147,18 @@ namespace arima_kana {
         catch (...) { return; }
       }
 
-      void find(const K &k) {
-        bool flag = false;
-        arima_kana::vector<size_t> tmp = list.find(k);
+      vector<size_t> find(const K &k) {
+        vector<size_t> res;
+        vector<size_t> tmp = list.find(k);
         for (int i = 0; i < tmp.size(); i++) {
           DNode &t = data_list[tmp[i]];
           for (int j = 0; j < t.size; j++) {
             if (t._data[j].first == k) {
-              std::cout << t._data[j].second << ' ';
-              flag = true;
+              res.push_back(t._data[j].second);
             }
           }
         }
-        if (!flag) std::cout << "null";
-        std::cout << '\n';
+        return res;
       }
 
       void print() {

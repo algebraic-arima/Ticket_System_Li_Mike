@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include "utility.h"
 
 namespace arima_kana {
     template<class T, class pre, size_t num, size_t _cap>
@@ -15,7 +16,6 @@ namespace arima_kana {
       struct Node {
         size_t pos;
         T data;
-        T copy;
         Node *next;
         Node *prev;
       };
@@ -66,8 +66,7 @@ namespace arima_kana {
 //        std::cout << "~Buffer\n";
         Node *tmp = head->next;
         while (tmp != tail) {
-          if (!(tmp->data == tmp->copy))
-            write_node(tmp->data, tmp->pos);
+          write_node(tmp->data, tmp->pos);
           Node *tmp2 = tmp;
           tmp = tmp->next;
           delete tmp2;
@@ -90,9 +89,8 @@ namespace arima_kana {
           }
           tmp = tmp->next;
         }
-        Node *new_n = new Node{pos, T(), T(), head->next, head};
+        Node *new_n = new Node{pos, T(), head->next, head};
         read_node(new_n->data, pos);
-        new_n->copy = new_n->data;
         head->next->prev = new_n;
         head->next = new_n;
         ++_size;
@@ -100,8 +98,7 @@ namespace arima_kana {
           tmp = tail->prev;
           tmp->prev->next = tail;
           tail->prev = tmp->prev;
-          if (!(tmp->data == tmp->copy))
-            write_node(tmp->data, tmp->pos);
+          write_node(tmp->data, tmp->pos);
           delete tmp;
           --_size;
         }
@@ -138,7 +135,7 @@ namespace arima_kana {
       }
 
       ~Table_Buffer() {
-        for (size_t i = 0; i < table.size(); ++i){
+        for (size_t i = 0; i < table.size(); ++i) {
           if (table[i] != nullptr) {
             write_node(*table[i], i);
             delete table[i];
