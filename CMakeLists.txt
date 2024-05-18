@@ -20,4 +20,5 @@ add_executable(code
         src/map.h
         manage/account.h
         main.cpp
+        manage/train.h
 )

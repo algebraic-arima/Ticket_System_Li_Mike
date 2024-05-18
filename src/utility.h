@@ -19,6 +19,10 @@ namespace arima_kana {
         strcpy(id, _key);
       }
 
+      explicit m_string(const std::string &rhs) {
+        strcpy(id, rhs.c_str());
+      }
+
       m_string &operator=(const m_string &rhs) {
         if (this == &rhs) return *this;
         strcpy(id, rhs.id);

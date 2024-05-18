@@ -57,22 +57,22 @@ namespace arima_kana {
         --size;
       }
 
-      V find_pair(K key) {
+      V &find_pair(K key) {
         static size_t pos = -1;
         if (pos != -1) {
           ++pos;
-          if (_data[pos].key == key) return _data[pos].value;
+          if (_data[pos].first == key) return _data[pos].second;
           else return {};
         }
         size_t l = 0, r = size;
         while (l < r) {
           size_t mid = (l + r) / 2;
-          if (_data[mid].key < key) l = mid;
+          if (_data[mid].first < key) l = mid;
           else r = mid;
         }
-        if (_data[r].key == key) {
+        if (_data[r].first == key) {
           pos = r;
-          return _data[r].value;
+          return _data[r].second;
         } else {
           pos = -1;
           return {};
