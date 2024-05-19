@@ -21,8 +21,8 @@ namespace arima_kana {
 
       AccountInfo() = default;
 
-      AccountInfo(acc_id _id, passwd _pw, mailaddr _mail, short p) :
-              id(_id), pw(_pw), mail(_mail), priv(p) {}
+      AccountInfo(acc_id _id, passwd _pw, name nm, mailaddr _mail, short p) :
+              id(_id), pw(_pw), nm(nm), mail(_mail), priv(p) {}
 
       bool operator==(const AccountInfo &rhs) const {
         return id == rhs.id;
@@ -31,10 +31,15 @@ namespace arima_kana {
       bool operator<(const AccountInfo &rhs) const {
         return id < rhs.id;
       }
+
+      friend std::ostream &operator<<(std::ostream &os, const AccountInfo &info) {
+        os << info.id << " " << info.nm << " " << info.mail << " " << info.priv;
+        return os;
+      }
     };
 
     class Account {
-
+    public:
       BlockRiver<acc_id, AccountInfo, 80> list;
       std::map<acc_id, short> login_list;
 
@@ -82,10 +87,10 @@ namespace arima_kana {
         return true;
       }
 
-      AccountInfo get_usr(const acc_id &c_id, const acc_id &id) {
+      AccountInfo &get_usr(const acc_id &c_id, const acc_id &id) {
         auto it = login_list.find(c_id);
         if (it == login_list.end()) {
-          error("not logged in");
+          error("get_usr: cur user not logged in");
         }
         vector<AccountInfo *> pos = list.find(id);
         if (pos.size() != 1) {
@@ -97,52 +102,19 @@ namespace arima_kana {
         return *pos[0];
       }
 
-      AccountInfo modify_usr(const acc_id &c_id, const acc_id &id, const passwd &pw) {
+      short get_priv(const acc_id &c_id) {
         auto it = login_list.find(c_id);
         if (it == login_list.end()) {
-          error("not logged in");
+          error("get privilege: not logged in");
         }
-        vector<AccountInfo *> pos = list.find(id);
-        if (pos.size() != 1) {
-          error("User not found or duplicated");
-        }
-        if (c_id != id && it->second <= pos[0]->priv) {
-          error("privilege not enough");
-        }
-        pos[0]->pw = pw;
-        return *pos[0];
+        return it->second;
       }
 
-      AccountInfo modify_usr(const acc_id &c_id, const acc_id &id, const name &nm) {
-        auto it = login_list.find(c_id);
-        if (it == login_list.end()) {
-          error("not logged in");
+      void modify_priv(const acc_id &id, const short &priv) {
+        auto it = login_list.find(id);
+        if (it != login_list.end()) {
+          it->second = priv;
         }
-        vector<AccountInfo *> pos = list.find(id);
-        if (pos.size() != 1) {
-          error("User not found or duplicated");
-        }
-        if (c_id != id && it->second <= pos[0]->priv) {
-          error("privilege not enough");
-        }
-        pos[0]->nm = nm;
-        return *pos[0];
-      }
-
-      AccountInfo modify_usr(const acc_id &c_id, const acc_id &id, const mailaddr &mail) {
-        auto it = login_list.find(c_id);
-        if (it == login_list.end()) {
-          error("not logged in");
-        }
-        vector<AccountInfo *> pos = list.find(id);
-        if (pos.size() != 1) {
-          error("User not found or duplicated");
-        }
-        if (c_id != id && it->second <= pos[0]->priv) {
-          error("privilege not enough");
-        }
-        pos[0]->mail = mail;
-        return *pos[0];
       }
 
       AccountInfo modify_usr(const acc_id &c_id, const acc_id &id, const short &priv) {

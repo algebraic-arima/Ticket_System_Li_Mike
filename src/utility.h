@@ -222,6 +222,77 @@ namespace arima_kana {
         alloc.deallocate(data, _capacity);
       }
 
+      class iterator {
+        T *ptr;
+      public:
+        iterator(T *p) : ptr(p) {}
+
+        iterator operator++() {
+          ptr++;
+          return *this;
+        }
+
+        iterator operator++(int) {
+          iterator tmp = *this;
+          ptr++;
+          return tmp;
+        }
+
+        iterator operator--() {
+          ptr--;
+          return *this;
+        }
+
+        iterator operator--(int) {
+          iterator tmp = *this;
+          ptr--;
+          return tmp;
+        }
+
+        iterator operator+(int n) {
+          return iterator(ptr + n);
+        }
+
+        iterator operator-(int n) {
+          return iterator(ptr - n);
+        }
+
+        T &operator*() {
+          return *ptr;
+        }
+
+        bool operator==(const iterator &rhs) {
+          return ptr == rhs.ptr;
+        }
+
+        bool operator!=(const iterator &rhs) {
+          return ptr != rhs.ptr;
+        }
+      };
+
+      iterator begin() {
+        return iterator(data);
+      }
+
+      iterator end() {
+        return iterator(data + _size);
+      }
+
+      friend void sort(iterator l, iterator r, bool (*cmp)(const T &, const T &)) {
+        if (l == r) return;
+        iterator i = l, j = r;
+        T mid = *l;
+        while (i != j) {
+          while (i != j && cmp(*j, mid)) j--;
+          if (i != j) *i = *j;
+          while (i != j && !cmp(*i, mid)) i++;
+          if (i != j) *j = *i;
+        }
+        *i = mid;
+        sort(l, i - 1, cmp);
+        sort(i + 1, r, cmp);
+      }
+
     };
 }
 

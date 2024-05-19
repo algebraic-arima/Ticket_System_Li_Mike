@@ -21,4 +21,5 @@ add_executable(code
         manage/account.h
         main.cpp
         manage/train.h
+        manage/parser.h
 )
