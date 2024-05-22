@@ -33,7 +33,7 @@ namespace arima_kana {
       }
 
       friend std::ostream &operator<<(std::ostream &os, const AccountInfo &info) {
-        os << info.id << " " << info.nm << " " << info.mail << " " << info.priv;
+        os << info.id << " " << info.nm << " " << info.mail << " " << info.priv << " " << info.pw;
         return os;
       }
     };
@@ -43,7 +43,7 @@ namespace arima_kana {
       BlockRiver<acc_id, AccountInfo, 80> list;
       std::map<acc_id, short> login_list;
 
-      explicit Account(const std::string &af = "account") :
+      explicit Account(const std::string &af = "data/account") :
               list(af) {}
 
       bool add_usr(const acc_id &c_id, const AccountInfo &usr) {
@@ -75,7 +75,7 @@ namespace arima_kana {
           return false;
         if (tmp[0]->pw != pw)
           return false;
-        login_list[id] = tmp[0]->priv;
+        login_list.insert(std::make_pair(id, tmp[0]->priv));
         return true;
       }
 
@@ -110,35 +110,6 @@ namespace arima_kana {
         return it->second;
       }
 
-      void modify_priv(const acc_id &id, const short &priv) {
-        auto it = login_list.find(id);
-        if (it != login_list.end()) {
-          it->second = priv;
-        }
-      }
-
-      AccountInfo modify_usr(const acc_id &c_id, const acc_id &id, const short &priv) {
-        auto it = login_list.find(c_id);
-        if (it == login_list.end()) {
-          error("not logged in");
-        }
-        vector<AccountInfo *> pos = list.find(id);
-        if (pos.size() != 1) {
-          error("User not found or duplicated");
-        }
-        if (c_id != id && it->second <= pos[0]->priv) {
-          error("privilege not enough");
-        }
-        if (it->second <= priv) {
-          error("modify-to: privilege not enough");
-        }
-        pos[0]->priv = priv;
-        auto it_mod = login_list.find(id);
-        if (it_mod != login_list.end()) {
-          it_mod->second = priv;
-        }
-        return *pos[0];
-      }
     };
 
 }

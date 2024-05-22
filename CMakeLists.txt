@@ -22,4 +22,5 @@ add_executable(code
         main.cpp
         manage/train.h
         manage/parser.h
+        manage/seat.h
 )

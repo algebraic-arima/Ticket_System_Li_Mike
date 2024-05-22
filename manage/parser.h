@@ -153,35 +153,50 @@ namespace arima_kana {
       inline void handle_modify_profile() {
         acc_id c_id, id;
         std::string param;
-        for (int i = 0; i < 2; ++i) {
-          ss >> param;
+        passwd pw;
+        name nm;
+        mailaddr mail;
+        short priv;
+        bool flag[4] = {false, false, false, false};
+        while (ss >> param) {
           if (param[1] == 'c') {
             ss >> c_id;
           } else if (param[1] == 'u') {
             ss >> id;
+          } else if (param[1] == 'p') {
+            ss >> pw;
+            flag[0] = true;
+          } else if (param[1] == 'n') {
+            ss >> nm;
+            flag[1] = true;
+          } else if (param[1] == 'm') {
+            ss >> mail;
+            flag[2] = true;
+          } else if (param[1] == 'g') {
+            ss >> priv;
+            flag[3] = true;
           }
         }
+
         try {
           AccountInfo &tmp = acc.get_usr(c_id, id);
           short c_priv = acc.get_priv(c_id);
-          while (ss >> param) {
-            if (param[1] == 'p') {
-              passwd pw;
-              ss >> pw;
-            } else if (param[1] == 'n') {
-              name nm;
-              ss >> nm;
-            } else if (param[1] == 'm') {
-              mailaddr mail;
-              ss >> mail;
-            } else if (param[1] == 'g') {
-              short priv;
-              ss >> priv;
-              if (c_priv <= priv) {
-                error("modify-priv: privilege not enough");
-              }
-            }
+          if (flag[3] && c_priv <= priv) {
+            error("modify-priv: privilege not enough");
           }
+          if (flag[0]) {
+            tmp.pw = pw;
+          }
+          if (flag[1]) {
+            tmp.nm = nm;
+          }
+          if (flag[2]) {
+            tmp.mail = mail;
+          }
+          if (flag[3]) {
+            tmp.priv = priv;
+          }
+          std::cout << tmp << '\n';
         } catch (const ErrorException &e) {
           std::cout << e.getMessage() << '\n';
         }

@@ -150,8 +150,15 @@ namespace arima_kana {
       }
 
     public:
-      vector(size_t cap = 10) : _size(0), _capacity(cap) {
+      vector(size_t cap = 100) : _size(0), _capacity(cap) {
         data = alloc.allocate(_capacity);
+      }
+
+      vector(const T &val, size_t cap = 100) : _size(cap), _capacity(cap) {
+        data = alloc.allocate(_capacity);
+        for (size_t i = 0; i < _size; i++) {
+          alloc.construct(data + i, val);
+        }
       }
 
       void push_back(const T &val) {
@@ -208,11 +215,27 @@ namespace arima_kana {
         data = alloc.allocate(_capacity);
       }
 
-      bool find(const T &val) {
-        for (size_t i = 0; i < _size; i++) {
-          if (data[i] == val) return true;
+      void resize(size_t new_size) {
+        if (new_size > _size) {
+          if (new_size > _capacity) {
+            size_t old_capacity = _capacity;
+            while (_capacity < new_size) {
+              _capacity *= 2;
+            }
+            T *tmp = alloc.allocate(_capacity);
+            for (size_t i = 0; i < _size; i++) {
+              alloc.construct(tmp + i, data[i]);
+            }
+            alloc.deallocate(data, old_capacity);
+            data = tmp;
+          }
+          _size = new_size;
+        } else {
+          for (size_t i = new_size; i < _size; i++) {
+            alloc.destroy(data + i);
+          }
+          _size = new_size;
         }
-        return false;
       }
 
       ~vector() {

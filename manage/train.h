@@ -162,6 +162,9 @@ namespace arima_kana {
       int occupied_seat[100][100] = {0};
       // on the i-th day, from the j-th to the j+1-th station
       // date_num * (station_num - 1)
+      // stored in another file
+      // occupied_seat[date_index][station_index] =
+      // (occupied_seat_index * 100 * 100 + date_index * 100 + station_index) * sizeof(int)
       int price[100] = {0};
       time start_time;
       int travel_time[100] = {0};// station_num - 1
@@ -253,7 +256,7 @@ namespace arima_kana {
       // insert into train_list to initialize
       // insert into edge_list when release
 
-      Train() : train_list("train"), edge_list("edge") {}
+      Train() : train_list("data/train"), edge_list("data/edge") {}
 
       void add_train(const std::string &param) {
         TrainInfo tmp;
@@ -460,8 +463,11 @@ namespace arima_kana {
         }
       }
 
-      int buy_ticket(const train_id &t_id, const station_name &from, const station_name &to, const date &d,
-                      const int &num) {
+      int buy_ticket(const train_id &t_id,
+                     const station_name &from,
+                     const station_name &to,
+                     const date &d,
+                     const int &num) {
         vector<TrainInfo *> t = train_list.find(t_id);
         if (t.size() != 1) {
           error("train not found or duplicated");
@@ -476,7 +482,7 @@ namespace arima_kana {
           } else if (tmp.stations[i] == to) {
             end = i;
           }
-          if(start != -1 && end == -1) {
+          if (start != -1 && end == -1) {
             price += tmp.price[i];
           }
           if (start != -1 && end != -1) {
