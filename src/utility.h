@@ -29,6 +29,16 @@ namespace arima_kana {
         return *this;
       }
 
+      m_string &operator=(const std::string &rhs) {
+        strcpy(id, rhs.c_str());
+        return *this;
+      }
+
+      m_string &operator=(const char _key[]) {
+        strcpy(id, _key);
+        return *this;
+      }
+
       bool operator==(const m_string &rhs) const {
         return (strcmp(id, rhs.id) == 0);
       }

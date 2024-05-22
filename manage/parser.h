@@ -6,6 +6,7 @@
 #include "account.h"
 #include "train.h"
 #include "error.h"
+#include "order.h"
 
 namespace arima_kana {
     class Parser {
@@ -13,7 +14,8 @@ namespace arima_kana {
       std::stringstream ss;
       Account acc;
       Train tr;
-      int timestamp = 0;
+      Order ord;
+      static int timestamp;
 
       Parser() = default;
 
@@ -30,7 +32,7 @@ namespace arima_kana {
           if (cmd[len - 3] == 's') {
             handle_add_user();
           } else if (cmd[len - 3] == 'a') {
-            // add_train
+            handle_add_train();
           }
         } else if (cmd[0] == 'l') {
           if (cmd[len - 3] == 'g') {
@@ -42,26 +44,26 @@ namespace arima_kana {
           if (cmd[len - 3] == 'i') {
             handle_query_profile();
           } else if (cmd[len - 3] == 'a') {
-            // query_train
+            handle_query_train();
           } else if (cmd[len - 3] == 'k') {
-            // query_ticket
+            handle_query_ticket();
           } else if (cmd[len - 3] == 'f') {
             // query_transfer
           } else if (cmd[len - 3] == 'd') {
-            // query_order
+            handle_query_order();
           }
         } else if (cmd[0] == 'm') {
           handle_modify_profile();
         } else if (cmd[0] == 'd') {
-          // delete_train
+          handle_delete_train();
         } else if (cmd[0] == 'r') {
           if (cmd[len - 3] == 'a') {
-            // release_train
+            handle_release_train();
           } else if (cmd[len - 3] == 'k') {
-            // refund_ticket
+            handle_refund_ticket();
           }
         } else if (cmd[0] == 'b') {
-          // buy_ticket
+          handle_buy_ticket();
         } else if (cmd[0] == 'c') {
           // clean
         }
@@ -202,6 +204,183 @@ namespace arima_kana {
         }
       }
 
+      inline void handle_add_train() {
+        std::string train_param;
+        getline(ss, train_param);
+        try {
+          tr.add_train(train_param);
+          std::cout << "0\n";
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_delete_train() {
+        train_id tr_id;
+        std::string param;
+        ss >> param;
+        if (param[1] == 'i') {
+          ss >> tr_id;
+        }
+        try {
+          tr.delete_train(tr_id);
+          std::cout << "0\n";
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_release_train() {
+        train_id tr_id;
+        std::string param;
+        ss >> param;
+        if (param[1] == 'i') {
+          ss >> tr_id;
+        }
+        try {
+          tr.release_train(tr_id);
+          std::cout << "0\n";
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_query_order() {
+        acc_id c_id;
+        std::string param;
+        ss >> param;
+        if (param[1] == 'u') {
+          ss >> c_id;
+        }
+        if (acc.login_list.find(c_id) == acc.login_list.end()) {
+          std::cout << "Not logged in\n";
+          return;
+        }
+        try {
+          ord.query_order(c_id);
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_refund_ticket() {
+        std::string param;
+        acc_id c_id;
+        int n = 1;
+        while (ss >> param) {
+          if (param[1] == 'u') {
+            ss >> c_id;
+          } else if (param[1] == 'n') {
+            ss >> n;
+          }
+        }
+        if (acc.login_list.find(c_id) == acc.login_list.end()) {
+          std::cout << "Not logged in\n";
+          return;
+        }
+        try {
+          auto it = ord.refund_ticket(c_id, n);
+          tr.refund_ticket(it->tr_id, it->from, it->to, it->d, it->ticket_num);
+          std::cout << "0\n";
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_buy_ticket() {
+        acc_id c_id;
+        train_id tr_id;
+        station_name from, to;
+        date d;
+        int n;
+        bool queue = false;
+        std::string q;
+        std::string param;
+        while (ss >> param) {
+          if (param[1] == 'u') {
+            ss >> c_id;
+          } else if (param[1] == 'i') {
+            ss >> tr_id;
+          } else if (param[1] == 'f') {
+            ss >> from;
+          } else if (param[1] == 't') {
+            ss >> to;
+          } else if (param[1] == 'd') {
+            ss >> d;
+          } else if (param[1] == 'n') {
+            ss >> n;
+          } else if (param[1] == 'q') {
+            ss >> q;
+            if (q == "true") queue = true;
+          }
+        }
+        if (acc.login_list.find(c_id) == acc.login_list.end()) {
+          std::cout << "Not logged in\n";
+          return;
+        }
+        try {
+          time s, t;
+          auto price = tr.buy_ticket(s, t, tr_id, from, to, d, n, queue);
+          if (price.first == -1) {
+            std::cout << "-1\n";
+            return;
+          } else if (price.second == -1) {
+            // add_queue
+            ord.add_order(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n, false);
+            std::cout << "queue\n";
+            return;
+          } else {
+            std::cout << price.first * n << '\n';
+            ord.add_order(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n, true);
+          }
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_query_train() {
+        std::string param;
+        train_id tr_id;
+        date d;
+        for (int i = 0; i < 2; i++) {
+          ss >> param;
+          if (param[1] == 'i') {
+            ss >> tr_id;
+          } else if (param[1] == 'd') {
+            ss >> d;
+          }
+        }
+        try {
+          tr.query_train(tr_id, d);
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_query_ticket() {
+        std::string param;
+        station_name from, to;
+        date d;
+        std::string p;
+        bool is_time = true;
+        while (ss >> param) {
+          if (param[1] == 'f') {
+            ss >> from;
+          } else if (param[1] == 't') {
+            ss >> to;
+          } else if (param[1] == 'd') {
+            ss >> d;
+          } else if (param[1] == 'p') {
+            ss >> p;
+            if (p == "cost") is_time = false;
+          }
+        }
+        try {
+          tr.query_ticket(from, to, d, is_time);
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
 
     };
 }
