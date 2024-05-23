@@ -23,7 +23,7 @@ namespace arima_kana {
         strcpy(id, rhs.c_str());
       }
 
-      m_string &operator=(const m_string &rhs) {
+      m_string<length> &operator=(const m_string<length> &rhs) {
         if (this == &rhs) return *this;
         strcpy(id, rhs.id);
         return *this;
@@ -301,6 +301,10 @@ namespace arima_kana {
         bool operator!=(const iterator &rhs) {
           return ptr != rhs.ptr;
         }
+
+        bool operator<(const iterator &rhs) {
+          return ptr < rhs.ptr;
+        }
       };
 
       iterator begin() {
@@ -312,7 +316,7 @@ namespace arima_kana {
       }
 
       friend void sort(iterator l, iterator r, bool (*cmp)(const T &, const T &)) {
-        if (l == r) return;
+        if (r < l) return;
         iterator i = l, j = r;
         T mid = *l;
         while (i != j) {

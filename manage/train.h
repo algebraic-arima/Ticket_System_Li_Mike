@@ -32,7 +32,9 @@ namespace arima_kana {
 
       friend std::ostream &operator<<(std::ostream &os, const date &da) {
         if (da.m < 10) os << '0';
-        os << da.m << '-' << da.d;
+        os << da.m << '-';
+        if (da.d < 10) os << '0';
+        os << da.d;
         return os;
       }
 
@@ -223,7 +225,7 @@ namespace arima_kana {
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
 
-      Train() : train_list("data/train"), edge_list("data/edge") {}
+      Train() : train_list("2train"), edge_list("3edge") {}
 
       void add_train(const std::string &param) {
         TrainInfo tmp;
@@ -302,7 +304,7 @@ namespace arima_kana {
         tmp.date_num = date(e) - tmp.start_date + 1;
         tmp.occupied_seat_index = seat_list.train_num + 1;
         train_list.insert(tmp.t_id, tmp);
-        seat_list.add_new_train(tmp.date_num, tmp.station_num, tmp.seat_num);
+        seat_list.add_new_train(tmp.date_num, tmp.station_num - 1, tmp.seat_num);
       }
 
       void release_train(const train_id &t_id) {
@@ -381,8 +383,12 @@ namespace arima_kana {
           if (i != tr.station_num - 1) {
             price_sum += tr.price[i];
           }
-          SeatInfo &tr_seat = seat_list.get_train(tr.occupied_seat_index);
-          std::cout << tr_seat.seat[d - tr.start_date][i] << '\n';
+          if (i != tr.station_num - 1) {
+            SeatInfo &tr_seat = seat_list.get_train(tr.occupied_seat_index);
+            std::cout << tr_seat.seat[d - tr.start_date][i] << '\n';
+          } else {
+            std::cout << 'x' << '\n';
+          }
         }
       }
 
@@ -441,7 +447,7 @@ namespace arima_kana {
             if (start != -1 && end == -1) {
               time_interval += tmp.travel_time[j] + tmp.stopover_time[j];
               price += tmp.price[j];
-              seat_num = std::min(seat_num, tmp.seat_num - tr_seat.seat[date_index][j]);
+              seat_num = std::min(seat_num, tr_seat.seat[date_index][j]);
             }// mount the time, price and min seat_num
             if (start != -1 && end != -1) {
               break;
@@ -463,15 +469,16 @@ namespace arima_kana {
             q.time_interval = time_interval;
             q.vacant_seat = seat_num;
             res.push_back(q);
+            ++i;
           }
         }
         if (is_time) {
-          sort(res.begin(), res.end(), [](const query_info &a, const query_info &b) {
+          sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
             return a.time_interval < b.time_interval
                    || (a.time_interval == b.time_interval && a.t_id < b.t_id);
           });
         } else {
-          sort(res.begin(), res.end(), [](const query_info &a, const query_info &b) {
+          sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
             return a.price < b.price ||
                    (a.price == b.price && a.t_id < b.t_id);
           });

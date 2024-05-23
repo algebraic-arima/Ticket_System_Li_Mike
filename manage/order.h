@@ -65,7 +65,7 @@ namespace arima_kana {
     public:
       BlockRiver<acc_id, OrderInfo, 80> list;
 
-      explicit Order(const std::string &af = "data/order") :
+      explicit Order(const std::string &af = "4order") :
               list(af) {}
 
       void query_order(const acc_id &c_id) {
@@ -98,6 +98,17 @@ namespace arima_kana {
         orders[n - 1]->refunded = true;
         orders[n - 1]->success = false;
         return orders[n - 1];
+      }
+
+      OrderInfo *alt_ticket(const acc_id &id, size_t o_t) {
+        vector<OrderInfo *> orders = list.find(id);
+        for (auto &order: orders) {
+          if (order->order_time == o_t) {
+            order->success = true;
+            order->refunded = false;
+            return order;
+          }
+        }
       }
 
     };

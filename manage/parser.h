@@ -364,7 +364,7 @@ namespace arima_kana {
         std::string p;
         bool is_time = true;
         while (ss >> param) {
-          if (param[1] == 'f') {
+          if (param[1] == 's') {
             ss >> from;
           } else if (param[1] == 't') {
             ss >> to;

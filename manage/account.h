@@ -43,7 +43,7 @@ namespace arima_kana {
       BlockRiver<acc_id, AccountInfo, 80> list;
       std::map<acc_id, short> login_list;
 
-      explicit Account(const std::string &af = "data/account") :
+      explicit Account(const std::string &af = "1account") :
               list(af) {}
 
       bool add_usr(const acc_id &c_id, const AccountInfo &usr) {
