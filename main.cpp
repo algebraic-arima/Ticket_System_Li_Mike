@@ -17,6 +17,7 @@ int main() {
   arima_kana::Parser parser;
   while (true) {
     getline(cin, str);
+    if (str.empty()) continue;
     if (str == "exit") break;
     parser.handle(str);
   }

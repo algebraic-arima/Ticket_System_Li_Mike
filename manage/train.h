@@ -437,7 +437,7 @@ namespace arima_kana {
           int time_interval = 0;
           int price = 0;
           int seat_num = 0x3fffffff;
-          int date_index = d - tmp.start_date;
+          int date_index = origin_start_date - tmp.start_date;
           for (int j = 0; j < tmp.station_num - 1; j++) {
             if (tmp.stations[j] == s) {
               start = j;
@@ -453,18 +453,26 @@ namespace arima_kana {
               break;
             }
           }
-          time_interval -= tmp.stopover_time[end - 1];
+          if (tmp.stations[tmp.station_num - 1] == t) {
+            end = tmp.station_num - 1;
+          }
+
           if (start == -1 || end == -1 || start >= end) {
             i++;
             continue;
           } else {
+            time_interval -= tmp.stopover_time[end - 1];
             q.t_id = e[i]->t_id;
             q.from = s;
             q.to = t;
             q.s_d = d;
-            q.e_d = d + e[i]->start_time.h / 24;
             q.s_t = e[i]->start_time;
+            q.s_t.h %= 24;
             q.e_t = e[i]->start_time + time_interval;
+            q.e_d = origin_start_date + q.e_t.h / 24;
+            q.e_t.h %= 24;
+
+            q.e_t.h %= 24;
             q.price = price;
             q.time_interval = time_interval;
             q.vacant_seat = seat_num;
@@ -483,6 +491,7 @@ namespace arima_kana {
                    (a.price == b.price && a.t_id < b.t_id);
           });
         }
+        std::cout << res.size() << '\n';
         for (auto &it: res) {
           std::cout << it << '\n';
         }
@@ -530,8 +539,13 @@ namespace arima_kana {
             break;
           }
         }
+        if (tmp.stations[tmp.station_num - 1] == to) {
+          end = tmp.station_num - 1;
+          ed = cur_time;
+        }
+        date_index -= st.h / 24;
         if (start == -1 || end == -1 || start >= end) {
-          error("invalid_station");
+          error("end station not in the train route");
         }
         try {
           seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
