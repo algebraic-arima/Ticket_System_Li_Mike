@@ -18,7 +18,10 @@ int main() {
   while (true) {
     getline(cin, str);
     if (str.empty()) continue;
-    if (str == "exit") break;
+    if (str.substr(str.size() - 4) == "exit") {
+      std::cout << str.substr(0, str.size() - 4) << "bye\n";
+      break;
+    }
     parser.handle(str);
   }
   return 0;

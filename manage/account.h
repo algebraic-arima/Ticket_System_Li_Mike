@@ -33,7 +33,8 @@ namespace arima_kana {
       }
 
       friend std::ostream &operator<<(std::ostream &os, const AccountInfo &info) {
-        os << info.id << " " << info.nm << " " << info.mail << " " << info.priv << " " << info.pw;
+        os << info.id << " " << info.nm << " " << info.mail << " " << info.priv;
+        //<< " " << info.pw;
         return os;
       }
     };

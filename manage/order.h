@@ -47,12 +47,13 @@ namespace arima_kana {
         os << "] " << info.tr_id << ' '
            << info.from << " "
            << info.d << " "
-           << info.s << ' '
+           << info.s << " -> "
            << info.to << " ";
         if (info.t.h >= 24) {
-          os << info.d + info.t.h / 24 << " " <<
-             info.t.h % 24 << ":"
-             << info.t.m << ":";
+          int hh = info.t.h % 24, mm = info.t.m;
+          os << info.d + info.t.h / 24 << " " << (hh < 10 ? "0" : "") <<
+             hh << ":" << (mm < 10 ? "0" : "")
+             << info.t.m << " ";
         } else {
           os << info.d << " " << info.t << " ";
         }
@@ -78,9 +79,9 @@ namespace arima_kana {
 
       void add_order(const acc_id &c_id,
                      size_t order_time,
-                     train_id train_id,
-                     station_name from,
-                     station_name to,
+                     const train_id &train_id,
+                     const station_name &from,
+                     const station_name &to,
                      date d, time s, time t,
                      int tot_price, int ticket_num,
                      bool success = true) {
@@ -109,6 +110,7 @@ namespace arima_kana {
             return order;
           }
         }
+        return nullptr;
       }
 
     };

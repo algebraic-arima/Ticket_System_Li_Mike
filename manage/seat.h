@@ -30,7 +30,7 @@ namespace arima_kana {
 
       static constexpr int SIZE_INT = sizeof(int);
 
-      explicit Seat(const std::string &fn = "data/seat") :
+      explicit Seat(const std::string &fn = "5seat") :
               name(fn),
               seat_list(fn) {
         file.open(name, std::ios::in | std::ios::out | std::ios::binary);

@@ -7,6 +7,7 @@
 #include "train.h"
 #include "error.h"
 #include "order.h"
+#include "pending.h"
 
 namespace arima_kana {
     class Parser {
@@ -15,6 +16,7 @@ namespace arima_kana {
       Account acc;
       Train tr;
       Order ord;
+      PendingList pend;
       static int timestamp;
 
       Parser() = default;
@@ -48,7 +50,7 @@ namespace arima_kana {
           } else if (cmd[len - 3] == 'k') {
             handle_query_ticket();
           } else if (cmd[len - 3] == 'f') {
-            // query_transfer
+            handle_query_transfer();
           } else if (cmd[len - 3] == 'd') {
             handle_query_order();
           }
@@ -278,12 +280,21 @@ namespace arima_kana {
           std::cout << "Not logged in\n";
           return;
         }
+        OrderInfo *it;
         try {
-          auto it = ord.refund_ticket(c_id, n);
+          it = ord.refund_ticket(c_id, n);
           tr.refund_ticket(it->tr_id, it->from, it->to, it->d, it->ticket_num);
           std::cout << "0\n";
         } catch (const ErrorException &e) {
           std::cout << e.getMessage() << '\n';
+        }
+        vector<PendingInfo *> pending = pend.get_pending(it->tr_id, it->d);
+        for (auto &p: pending) {
+          if (tr.is_satisfiable(p->tr_id, p->from, p->to, p->d, p->ticket_num)) {
+            pend.remove_pending(p);
+            ord.alt_ticket(p->buyer_id, p->order_time);
+            break;
+          }
         }
       }
 
@@ -325,7 +336,7 @@ namespace arima_kana {
             std::cout << "-1\n";
             return;
           } else if (price.second == -1) {
-            // add_queue
+            pend.add_pending(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n);
             ord.add_order(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n, false);
             std::cout << "queue\n";
             return;
@@ -377,6 +388,31 @@ namespace arima_kana {
         }
         try {
           tr.query_ticket(from, to, d, is_time);
+        } catch (const ErrorException &e) {
+          std::cout << e.getMessage() << '\n';
+        }
+      }
+
+      inline void handle_query_transfer() {
+        std::string param;
+        station_name from, to;
+        date d;
+        std::string p;
+        bool is_time = true;
+        while (ss >> param) {
+          if (param[1] == 'f') {
+            ss >> from;
+          } else if (param[1] == 't') {
+            ss >> to;
+          } else if (param[1] == 'd') {
+            ss >> d;
+          } else if (param[1] == 'p') {
+            ss >> p;
+            if (p == "cost") is_time = false;
+          }
+        }
+        try {
+          tr.query_transfer(from, to, d, is_time);
         } catch (const ErrorException &e) {
           std::cout << e.getMessage() << '\n';
         }
