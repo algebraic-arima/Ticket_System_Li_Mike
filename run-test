@@ -27,8 +27,7 @@ if [ -z "$list" ]; then
   exit 1
 fi
 
-
-exename="code"
+exename="./code"
 if [ ! -e "$exename" ]; then
   echo "Please compile the ticket system and place the executable at \"$exename\""
   exit 1
@@ -57,11 +56,12 @@ cwd="$(pwd)"
 basedir="$cwd/testcases/$1"
 
 cd "$testdir"
-chmod +x "$exe"
+chmod a+x "$exe"
 
 for i in $list; do
   outfile="$(tmp)"
   echo "About to run input #$i..."
+  echo "$basedir/$i.in"
   time "$exe" < "$basedir/$i.in" > "$outfile"
   difffile="$(tmp)"
   if diff -ZB "$outfile" "$basedir/$i.out" > "$difffile"; then true; else

@@ -320,9 +320,9 @@ namespace arima_kana {
         iterator i = l, j = r;
         T mid = *l;
         while (i != j) {
-          while (i != j && cmp(*j, mid)) j--;
+          while (i != j && !cmp(*j, mid)) j--;
           if (i != j) *i = *j;
-          while (i != j && !cmp(*i, mid)) i++;
+          while (i != j && cmp(*i, mid)) i++;
           if (i != j) *j = *i;
         }
         *i = mid;

@@ -35,11 +35,11 @@ namespace arima_kana {
               seat_list(fn) {
         file.open(name, std::ios::in | std::ios::out | std::ios::binary);
         if (!file.is_open()) {
+          file.close();
           init_data();
-          file.close();
         } else {
-          read_data();
           file.close();
+          read_data();// close the file first
         }
       }
 
@@ -65,9 +65,8 @@ namespace arima_kana {
         train_num++;
         SeatInfo tmp(d, s, n);
         seat_list[train_num] = tmp;
-        file.open(name, std::ios::in | std::ios::out | std::ios::binary);
-        file.seekp(0, std::ios::end);
-        file.write(reinterpret_cast<char *>(&tmp), sizeof(Seat));
+        file.open(name, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+        file.write(reinterpret_cast<char *>(&tmp), sizeof(SeatInfo));
         file.close();
       }
 
@@ -76,7 +75,7 @@ namespace arima_kana {
       }
 
       int search_seat(int pos, int date_ind, int l, int r) {
-        int ans = 1e5;
+        int ans = 2e5;
         SeatInfo &n = seat_list[pos];
         for (int i = l; i <= r; i++) {
           int tmp = n.seat[date_ind][i];

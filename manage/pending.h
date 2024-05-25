@@ -63,11 +63,17 @@ namespace arima_kana {
 
       vector<PendingInfo *> get_pending(const train_id &tr_id, const date &d) {
         vector<PendingInfo *> res = pend_list.find(tr_id);
-        return res;
+        vector<PendingInfo *> res1;
+        for (auto &i: res) {
+          if (i->d < d + 1 && d - 4 < i->d) {
+            res1.push_back(i);
+          }
+        }//filter by date
+        return res1;
       }
 
-      void remove_pending(PendingInfo *p) {
-        pend_list.remove(p->tr_id, *p);
+      void remove_pending(PendingInfo p) {
+        pend_list.remove(p.tr_id, p);
       }
 
     };

@@ -94,8 +94,14 @@ namespace arima_kana {
         list.insert(order.buyer_id, order);
       }
 
-      OrderInfo *refund_ticket(const acc_id &c_id, int n = 1) {
+      OrderInfo *refund_ticket(const acc_id &c_id, int n, bool &is_success, bool &is_pending, bool &is_refunded) {
         vector<OrderInfo *> orders = list.find(c_id);
+        if (orders.size() < n) {
+          error("No such order");
+        }// RE check
+        is_success = orders[n - 1]->success;
+        is_pending = !orders[n - 1]->success && !orders[n - 1]->refunded;
+        is_refunded = orders[n - 1]->refunded;
         orders[n - 1]->refunded = true;
         orders[n - 1]->success = false;
         return orders[n - 1];

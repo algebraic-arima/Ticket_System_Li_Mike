@@ -295,6 +295,10 @@ namespace arima_kana {
               break;
           }
         }
+        vector<TrainInfo *> t = train_list.find(tmp.t_id);
+        if (t.size() != 0) {
+          error("train_id_duplicated");
+        }
         ss.str(stations);
         ss.clear();
         int cnt = 0;
@@ -382,7 +386,7 @@ namespace arima_kana {
       }
 
       void print_train(const TrainInfo &tr, date d) {
-        if (d < tr.start_date || tr.start_date + tr.date_num < d) {
+        if (d < tr.start_date || tr.start_date + tr.date_num - 1 < d) {
           error("train not available on this date");
         }
         std::cout << tr.t_id << ' ' << tr.type << '\n';
@@ -436,6 +440,16 @@ namespace arima_kana {
           os << q.t_id << ' ' << q.from << ' ' << q.s_d << ' ' << q.s_t << " -> " << q.to << ' ' << q.e_d << ' '
              << q.e_t << ' ' << q.price << ' ' << q.vacant_seat;
           return os;
+        }
+
+        inline int interval() const {
+          int tmp = e_d - s_d;
+          time t1 = s_t, t2 = e_t;
+          if (t2 < t1) {
+            --tmp;
+            t2.h += 24;
+          }
+          return tmp * 24 * 60 + (t2 - t1);
         }
       };
 
@@ -510,7 +524,7 @@ namespace arima_kana {
           }
           int price = tmp.price[end] - tmp.price[start];
 
-          if (start == -1 || end == -1 || start >= end) {
+          if (start == -1 || end == -1 || start >= end || seat_num == 0) {
             i++;
             continue;
           } else {
@@ -535,8 +549,8 @@ namespace arima_kana {
         }
         if (is_time) {
           sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
-            return a.time_interval < b.time_interval
-                   || (a.time_interval == b.time_interval && a.t_id < b.t_id);
+            return a.interval() < b.interval()
+                   || (a.interval() == b.interval() && a.t_id < b.t_id);
           });
         } else {
           sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
@@ -629,12 +643,16 @@ namespace arima_kana {
               pos_2.push_back(tmp);
               if (k == 0) break;
               tmp.time_interval += tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
-              tmp.e_t += tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
+              tmp.s_t -= tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
+              if (tmp.s_t.h < 0) {
+                tmp.s_t.h += 24;
+                tmp.s_d -= 1;
+              }
               --tmp.from;
               tmp.sta = tmp2.stations[tmp.from];
               tmp.price = tmp2.price[st2] - tmp2.price[k - 1];
             }
-            if (tmp2.stations[k] == t) {
+            if (tmp2.stations[k] == t && k != 0) {
               st2 = k;
               tmp.t_id = t2;
               tmp.s_d = tmp2.start_date;
@@ -656,17 +674,21 @@ namespace arima_kana {
 
         for (auto &i: pos_1) {
           for (auto &j: pos_2) {
-            if (i.sta != j.sta) continue;
+            if (i.sta != j.sta || i.t_id == j.t_id)
+              continue;
             date origin_date_1 = d - i.s_t.h / 24;
             int delta = 0;
-            while (j.s_t < i.e_t) {
-              j.s_t.h += 24;
-              j.e_t.h += 24;
+            time s2 = j.s_t, e1 = i.e_t;
+            while (s2 < e1) {
               ++delta;
+              s2.h += 24;
             }
             date origin_date_2 = origin_date_1 + delta;
-            if (origin_date_2 < j.s_d || j.e_d < origin_date_2)
+            if (j.e_d < origin_date_2)
               continue;
+            else if (origin_date_2 < j.s_d)
+              origin_date_2 = j.s_d;
+            // later than the first train is all possible
             transfer_info res;
             query_info &q1 = res.q1;
             q1.t_id = i.t_id;
@@ -686,10 +708,10 @@ namespace arima_kana {
             q2.t_id = j.t_id;
             q2.from = j.sta;
             q2.to = t;
-            q2.s_d = origin_date_1 + j.s_t.h / 24;
+            q2.s_d = origin_date_2 + j.s_t.h / 24;
             q2.s_t = j.s_t;
             q2.s_t.h %= 24;
-            q2.e_d = origin_date_1 + j.e_t.h / 24;
+            q2.e_d = origin_date_2 + j.e_t.h / 24;
             q2.e_t = j.e_t;
             q2.e_t.h %= 24;
             q2.price = j.price;
@@ -738,6 +760,9 @@ namespace arima_kana {
         TrainInfo &tmp = *t[0];
         if (!tmp.released) {
           error("train not released");
+        }
+        if (num > tmp.seat_num) {
+          error("seat insatisfiable");
         }
         int date_index = d - tmp.start_date;
         int start = -1, end = -1;
@@ -845,15 +870,20 @@ namespace arima_kana {
         TrainInfo &tmp = *t[0];
         int date_index = d - tmp.start_date;
         int start = -1, end = -1;
+        time cur_time = tmp.start_time;
+        time st;
         for (int i = 0; i < tmp.station_num - 1; i++) {
           if (tmp.stations[i] == from) {
             start = i;
+            st = cur_time;
           } else if (tmp.stations[i] == to) {
             end = i;
           }
+          cur_time += tmp.travel_time[i];
           if (start != -1 && end != -1) {
             break;
           }
+          cur_time += tmp.stopover_time[i];
         }
         if (tmp.stations[tmp.station_num - 1] == to) {
           end = tmp.station_num - 1;
@@ -861,6 +891,7 @@ namespace arima_kana {
         if (start == -1 || end == -1 || start >= end) {
           error("invalid_station");
         }
+        date_index -= st.h / 24;// refund on the origin date
         seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
       }
 

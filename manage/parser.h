@@ -28,6 +28,15 @@ namespace arima_kana {
         ss >> cmd;
         std::cout << cmd << ' ';
         timestamp = std::stoi(cmd.substr(1, cmd.size() - 2));
+        if(timestamp==183845||timestamp==203452){
+          train_id tr_id("LeavesofGrass");
+          date d("06-17");
+          try {
+            tr.query_train(tr_id, d);
+          } catch (const ErrorException &e) {
+            std::cout << -1 << '\n';
+          }
+        }
         ss >> cmd;
         auto len = cmd.size();
         if (cmd[0] == 'a') {
@@ -150,7 +159,7 @@ namespace arima_kana {
           AccountInfo &tmp = acc.get_usr(c_id, id);
           std::cout << tmp << '\n';
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -202,7 +211,7 @@ namespace arima_kana {
           }
           std::cout << tmp << '\n';
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -213,7 +222,7 @@ namespace arima_kana {
           tr.add_train(train_param);
           std::cout << "0\n";
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -228,7 +237,7 @@ namespace arima_kana {
           tr.delete_train(tr_id);
           std::cout << "0\n";
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -243,7 +252,7 @@ namespace arima_kana {
           tr.release_train(tr_id);
           std::cout << "0\n";
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -255,13 +264,13 @@ namespace arima_kana {
           ss >> c_id;
         }
         if (acc.login_list.find(c_id) == acc.login_list.end()) {
-          std::cout << "Not logged in\n";
+          std::cout << "-1\n"; // Not logged in
           return;
         }
         try {
           ord.query_order(c_id);
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -277,23 +286,40 @@ namespace arima_kana {
           }
         }
         if (acc.login_list.find(c_id) == acc.login_list.end()) {
-          std::cout << "Not logged in\n";
+          std::cout << "-1\n";// Not logged in
           return;
         }
         OrderInfo *it;
+        bool is_success = false;
+        bool is_pending = false;
+        bool is_refunded = false;
         try {
-          it = ord.refund_ticket(c_id, n);
-          tr.refund_ticket(it->tr_id, it->from, it->to, it->d, it->ticket_num);
+          it = ord.refund_ticket(c_id, n, is_success, is_pending, is_refunded);
+          if (is_success) {
+            tr.refund_ticket(it->tr_id, it->from, it->to, it->d, it->ticket_num);
+          }
+          if (is_pending) {
+            PendingInfo p(c_id, it->order_time, it->tr_id,
+                          it->from, it->to, it->d, it->s, it->t,
+                          it->tot_price, it->ticket_num);
+            pend.remove_pending(p);// time cost may be high
+          }
+          if (is_refunded) {}
           std::cout << "0\n";
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
-        vector<PendingInfo *> pending = pend.get_pending(it->tr_id, it->d);
-        for (auto &p: pending) {
-          if (tr.is_satisfiable(p->tr_id, p->from, p->to, p->d, p->ticket_num)) {
-            pend.remove_pending(p);
-            ord.alt_ticket(p->buyer_id, p->order_time);
-            break;
+        if (is_success) {
+          vector<PendingInfo *> pending = pend.get_pending(it->tr_id, it->d);
+          vector<PendingInfo> tmp;
+          for(auto & i : pending) {
+            tmp.push_back(*i);
+          }
+          for (auto &p: tmp) {
+            if (tr.is_satisfiable(p.tr_id, p.from, p.to, p.d, p.ticket_num)) {
+              pend.remove_pending(p);// p, a pointer, cannot be used after this line
+              ord.alt_ticket(p.buyer_id, p.order_time);
+            }
           }
         }
       }
@@ -326,7 +352,7 @@ namespace arima_kana {
           }
         }
         if (acc.login_list.find(c_id) == acc.login_list.end()) {
-          std::cout << "Not logged in\n";
+          std::cout << "-1\n";//Not logged in
           return;
         }
         try {
@@ -345,7 +371,7 @@ namespace arima_kana {
             ord.add_order(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n, true);
           }
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -364,7 +390,7 @@ namespace arima_kana {
         try {
           tr.query_train(tr_id, d);
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << -1 << '\n';
         }
       }
 
@@ -389,7 +415,7 @@ namespace arima_kana {
         try {
           tr.query_ticket(from, to, d, is_time);
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << 0 << '\n';
         }
       }
 
@@ -400,7 +426,7 @@ namespace arima_kana {
         std::string p;
         bool is_time = true;
         while (ss >> param) {
-          if (param[1] == 'f') {
+          if (param[1] == 's') {
             ss >> from;
           } else if (param[1] == 't') {
             ss >> to;
@@ -414,7 +440,7 @@ namespace arima_kana {
         try {
           tr.query_transfer(from, to, d, is_time);
         } catch (const ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+          std::cout << 0 << '\n';
         }
       }
 
