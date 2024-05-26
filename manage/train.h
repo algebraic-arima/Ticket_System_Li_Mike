@@ -249,8 +249,8 @@ namespace arima_kana {
 
     class Train {
     public:
-      BlockRiver<train_id, TrainInfo, 80> train_list;
-      BlockRiver<station_name, EdgeInfo, 80> edge_list;
+      BlockRiver<train_id, TrainInfo, 32, 16, 7, 20> train_list;
+      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 100000> edge_list;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
@@ -527,21 +527,47 @@ namespace arima_kana {
                         const station_name &t,
                         const date &d,
                         bool is_time) {
-        vector<EdgeInfo *> e = edge_list.find(s);
-        if (e.size() == 0) {
-          error("no such station included in released trains");
+        vector<pair<train_id, time>> res_train;
+        {
+          vector<EdgeInfo *> e = edge_list.find(s);
+          vector<EdgeInfo *> f = edge_list.find(t);
+          if (e.size() == 0 || f.size() == 0) {
+            error("no such station included in released trains");
+          }
+          int p1 = 0, p2 = 0;
+
+          while (p1 < e.size() && p2 < f.size()) {
+            while (p1 < e.size() && e[p1]->t_id < f[p2]->t_id) {
+              ++p1;
+            }
+            if (p1 >= e.size()) break;
+            if (e[p1]->t_id == f[p2]->t_id) {
+              res_train.push_back(pair(e[p1]->t_id, e[p1]->start_time));
+              ++p1, ++p2;
+            }
+            if (p1 >= e.size() || p2 >= f.size()) break;
+            while (p2 < f.size() && f[p2]->t_id < e[p1]->t_id) {
+              ++p2;
+            }
+            if (p1 == e.size() || p2 >= f.size()) break;
+            if (e[p1]->t_id == f[p2]->t_id) {
+              res_train.push_back(pair(e[p1]->t_id, e[p1]->start_time));
+              ++p1, ++p2;
+            }
+          }
         }
+
         int i = 0;
         vector<query_info> res;
-        while (i < e.size()) {
-          vector<TrainInfo *> tr = train_list.find(e[i]->t_id);
+        while (i < res_train.size()) {
+          vector<TrainInfo *> tr = train_list.find(res_train[i].first);
           if (tr.size() != 1) {
             error("train not found or duplicated");
           }
 
           TrainInfo &tmp = *tr[0];
           SeatInfo &tr_seat = seat_list.get_train(tmp.occupied_seat_index);
-          date origin_start_date = d - e[i]->start_time.h / 24;
+          date origin_start_date = d - res_train[i].second.h / 24;
           if (origin_start_date < tmp.start_date || tmp.start_date + tmp.date_num - 1 < origin_start_date) {
             i++;
             continue;
@@ -576,13 +602,13 @@ namespace arima_kana {
             continue;
           } else {
             time_interval -= tmp.stopover_time[end - 1];
-            q.t_id = e[i]->t_id;
+            q.t_id = tmp.t_id;
             q.from = s;
             q.to = t;
             q.s_d = d;
-            q.s_t = e[i]->start_time;
+            q.s_t = res_train[i].second;
             q.s_t.h %= 24;
-            q.e_t = e[i]->start_time + time_interval;
+            q.e_t = res_train[i].second + time_interval;
             q.e_d = origin_start_date + q.e_t.h / 24;
             q.e_t.h %= 24;
 
@@ -770,7 +796,7 @@ namespace arima_kana {
         }
 
         if (result.empty()) {
-          std::cout << 0 << std::endl;
+          std::cout << "0\n";
           return;
         }
 
@@ -873,11 +899,11 @@ namespace arima_kana {
         vector<TrainInfo *> t = train_list.find(t_id);
         time st, ed;
         if (t.size() != 1) {
-          error("train not found or duplicated");
+          return false;
         }
         TrainInfo &tmp = *t[0];
         if (!tmp.released) {
-          error("train not released");
+          return false;
         }
         int date_index = d - tmp.start_date;
         int start = -1, end = -1;

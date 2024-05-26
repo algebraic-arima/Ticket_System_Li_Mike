@@ -64,16 +64,16 @@ namespace arima_kana {
 
     class Order {
     public:
-      BlockRiver<acc_id, OrderInfo, 80> list;
+      BlockRiver<acc_id, OrderInfo, 16, 16, 6, 100000> list;
 
       explicit Order(const std::string &af = "4order") :
               list(af) {}
 
       void query_order(const acc_id &c_id) {
         vector<OrderInfo *> orders = list.find(c_id);
-        std::cout << orders.size() << std::endl;
+        std::cout << orders.size() << '\n';
         for (auto &order: orders) {
-          std::cout << *order << std::endl;
+          std::cout << *order << '\n';
         }
       }
 

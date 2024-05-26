@@ -158,7 +158,7 @@ namespace arima_kana {
           AccountInfo &tmp = acc.get_usr(c_id, id);
           std::cout << tmp << '\n';
         } catch (const ErrorException &e) {
-          std::cout << -1 << '\n';
+          std::cout << "-1\n";
         }
       }
 
@@ -303,7 +303,10 @@ namespace arima_kana {
                           it->tot_price, it->ticket_num);
             pend.remove_pending(p);// time cost may be high
           }
-          if (is_refunded) {}
+          if (is_refunded) {
+            std::cout << -1 << '\n';
+            return;
+          }
           std::cout << "0\n";
         } catch (const ErrorException &e) {
           std::cout << -1 << '\n';

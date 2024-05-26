@@ -43,7 +43,7 @@ namespace arima_kana {
     };
 
     class PendingList {
-      BlockRiver<train_id, PendingInfo, 80> pend_list;
+      BlockRiver<train_id, PendingInfo, 16, 16, 5, 100000> pend_list;
 
     public:
       PendingList() : pend_list("6pending") {}
