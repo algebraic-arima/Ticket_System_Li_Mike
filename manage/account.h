@@ -41,7 +41,7 @@ namespace arima_kana {
 
     class Account {
     public:
-      BlockRiver<acc_id, AccountInfo, 32, 32, 10, 100000> list;
+      BlockRiver<acc_id, AccountInfo, 32, 32, 10, 10000> list;
       std::map<acc_id, short> login_list;
 
       explicit Account(const std::string &af = "1account") :
