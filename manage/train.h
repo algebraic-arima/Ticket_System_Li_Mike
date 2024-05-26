@@ -366,6 +366,11 @@ namespace arima_kana {
           edge_list.insert(edge.from, edge);
           cur_time += tmp.travel_time[i] + tmp.stopover_time[i];
         }
+        EdgeInfo edge;
+        edge.from = tmp.stations[tmp.station_num - 1];
+        edge.start_time = cur_time;
+        edge.t_id = t_id;
+        edge_list.insert(edge.from, edge);
       }
 
       void delete_train(const train_id &t_id) {
@@ -537,7 +542,7 @@ namespace arima_kana {
           TrainInfo &tmp = *tr[0];
           SeatInfo &tr_seat = seat_list.get_train(tmp.occupied_seat_index);
           date origin_start_date = d - e[i]->start_time.h / 24;
-          if (origin_start_date < tmp.start_date || tmp.start_date + tmp.date_num < origin_start_date) {
+          if (origin_start_date < tmp.start_date || tmp.start_date + tmp.date_num - 1 < origin_start_date) {
             i++;
             continue;
           }// not in the sale date
@@ -566,7 +571,7 @@ namespace arima_kana {
           }
           int price = tmp.price[end] - tmp.price[start];
 
-          if (start == -1 || end == -1 || start >= end || seat_num == 0) {
+          if (start == -1 || end == -1 || start >= end) {
             i++;
             continue;
           } else {
@@ -638,7 +643,7 @@ namespace arima_kana {
           }
           TrainInfo &tmp1 = *tr1[0];
           date origin_start_date = d - i->start_time.h / 24;
-          if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num < origin_start_date) {
+          if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num - 1 < origin_start_date) {
             continue;
           }// not in the sale date
           int st1 = -1;
@@ -849,12 +854,12 @@ namespace arima_kana {
             // queue
           }
         }
-        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
-          std::ofstream log("log.txt", std::ios::app);
-          log << timestamp << ": buy success\n";
-          log_train(log, tmp, origin_date);
-          log.close();
-        }
+//        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+//          std::ofstream log("log.txt", std::ios::app);
+//          log << timestamp << ": buy success\n";
+//          log_train(log, tmp, origin_date);
+//          log.close();
+//        }
         return pair(price, 0);
       }
 
@@ -906,12 +911,12 @@ namespace arima_kana {
         } catch (const ErrorException &e) {
           return false;
         }
-        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
-          std::ofstream log("log.txt", std::ios::app);
-          log << timestamp << ": pending->success\n";
-          log_train(log, tmp, origin_date);
-          log.close();
-        }
+//        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+//          std::ofstream log("log.txt", std::ios::app);
+//          log << timestamp << ": pending->success\n";
+//          log_train(log, tmp, origin_date);
+//          log.close();
+//        }
         return true;
       }
 
@@ -951,12 +956,12 @@ namespace arima_kana {
         date_index -= st.h / 24;// refund on the origin date
         date origin_date = d - st.h / 24;
         seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
-        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
-          std::ofstream log("log.txt", std::ios::app);
-          log << timestamp << ": refund\n";
-          log_train(log, tmp, origin_date);
-          log.close();
-        }
+//        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+//          std::ofstream log("log.txt", std::ios::app);
+//          log << timestamp << ": refund\n";
+//          log_train(log, tmp, origin_date);
+//          log.close();
+//        }
       }
 
     };

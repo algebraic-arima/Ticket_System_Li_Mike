@@ -77,7 +77,7 @@ namespace arima_kana {
       int search_seat(int pos, int date_ind, int l, int r) {
         int ans = 2e5;
         SeatInfo &n = seat_list[pos];
-        for (int i = l; i <= r; i++) {
+        for (int i = l; i < r; i++) {
           int tmp = n.seat[date_ind][i];
           if (tmp < ans) {
             ans = tmp;
