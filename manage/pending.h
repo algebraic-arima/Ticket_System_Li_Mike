@@ -4,7 +4,6 @@
 #include "train.h"
 #include "account.h"
 
-
 namespace arima_kana {
 
     class PendingInfo {
@@ -39,6 +38,7 @@ namespace arima_kana {
       bool operator<(const PendingInfo &rhs) const {
         if (tr_id != rhs.tr_id) return tr_id < rhs.tr_id;
         return order_time < rhs.order_time;
+        // first: tr_id, second: order_time
       }
     };
 
