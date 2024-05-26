@@ -24,4 +24,5 @@ add_executable(code
         manage/parser.h
         manage/seat.h
         manage/order.h
+        manage/pending.h
 )

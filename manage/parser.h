@@ -21,7 +21,7 @@ namespace arima_kana {
 
       Parser() = default;
 
-      void handle(const std::string &str) {
+      bool handle(const std::string &str) {
         ss.clear();
         ss.str(str);
         std::string cmd;
@@ -33,6 +33,10 @@ namespace arima_kana {
 //          tr.query_train(train_id("Aroundtheideaoft"), date(7, 8));
 //        }//debug
         ss >> cmd;
+        if (cmd == "exit") {
+          std::cout << "bye\n";
+          return false;
+        }
         auto len = cmd.size();
         if (cmd[0] == 'a') {
           if (cmd[len - 3] == 's') {
@@ -73,7 +77,7 @@ namespace arima_kana {
         } else if (cmd[0] == 'c') {
           // clean
         }
-
+        return true;
       }
 
       inline void handle_add_user() {
