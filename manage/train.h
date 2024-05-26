@@ -8,7 +8,9 @@
 #include "BlockRiver.h"
 #include "seat.h"
 
+
 namespace arima_kana {
+    extern int timestamp;
 
     typedef m_string<22> train_id;
     typedef m_string<44> station_name;
@@ -391,7 +393,6 @@ namespace arima_kana {
         }
         std::cout << tr.t_id << ' ' << tr.type << '\n';
         time tmp = tr.start_time;
-        int price_sum = 0;
         SeatInfo &tr_seat = seat_list.get_train(tr.occupied_seat_index);
         int date_index = d - tr.start_date;
         for (int i = 0; i < tr.station_num; i++) {
@@ -423,6 +424,47 @@ namespace arima_kana {
             std::cout << tr_seat.seat[date_index][i] << '\n';
           } else {
             std::cout << 'x' << '\n';
+          }
+        }
+      }
+
+      void log_train(std::ofstream &os, const TrainInfo &tr, date d) {
+        if (d < tr.start_date || tr.start_date + tr.date_num - 1 < d) {
+          error("train not available on this date");
+        }
+        os << tr.t_id << ' ' << tr.type << '\n';
+        time tmp = tr.start_time;
+        SeatInfo &tr_seat = seat_list.get_train(tr.occupied_seat_index);
+        int date_index = d - tr.start_date;
+        for (int i = 0; i < tr.station_num; i++) {
+          os << tr.stations[i] << ' ';
+          if (i == 0) {
+            os << "xx-xx xx:xx -> ";
+          } else {
+            os << d << ' ' << tmp << " -> ";
+            if (i != tr.station_num - 1) {
+              tmp += tr.stopover_time[i - 1];
+              if (tmp.h >= 24) {
+                tmp.h -= 24;
+                d += 1;
+              }
+            }
+          }
+          if (i == tr.station_num - 1) {
+            os << "xx-xx xx:xx";
+          } else {
+            os << d << ' ' << tmp;
+            tmp += tr.travel_time[i];
+            if (tmp.h >= 24) {
+              tmp.h -= 24;
+              d += 1;
+            }
+          }
+          os << ' ' << tr.price[i] << ' ';
+          if (i != tr.station_num - 1) {
+            os << tr_seat.seat[date_index][i] << '\n';
+          } else {
+            os << 'x' << '\n';
           }
         }
       }
@@ -793,6 +835,8 @@ namespace arima_kana {
         if (start == -1 || end == -1 || start >= end) {
           error("end station not in the train route");
         }
+
+
         try {
           seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
         } catch (const ErrorException &e) {
@@ -804,6 +848,12 @@ namespace arima_kana {
             return pair(price, -1);
             // queue
           }
+        }
+        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+          std::ofstream log("log.txt", std::ios::app);
+          log << timestamp << ": buy success\n";
+          log_train(log, tmp, origin_date);
+          log.close();
         }
         return pair(price, 0);
       }
@@ -847,6 +897,7 @@ namespace arima_kana {
           ed = cur_time;
         }
         date_index -= st.h / 24;
+        date origin_date = d - st.h / 24;
         if (start == -1 || end == -1 || start >= end) {
           error("end station not in the train route");
         }
@@ -854,6 +905,12 @@ namespace arima_kana {
           seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
         } catch (const ErrorException &e) {
           return false;
+        }
+        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+          std::ofstream log("log.txt", std::ios::app);
+          log << timestamp << ": pending->success\n";
+          log_train(log, tmp, origin_date);
+          log.close();
         }
         return true;
       }
@@ -892,7 +949,14 @@ namespace arima_kana {
           error("invalid_station");
         }
         date_index -= st.h / 24;// refund on the origin date
+        date origin_date = d - st.h / 24;
         seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
+        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+          std::ofstream log("log.txt", std::ios::app);
+          log << timestamp << ": refund\n";
+          log_train(log, tmp, origin_date);
+          log.close();
+        }
       }
 
     };

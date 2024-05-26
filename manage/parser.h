@@ -10,6 +10,7 @@
 #include "pending.h"
 
 namespace arima_kana {
+
     class Parser {
     public:
       std::stringstream ss;
@@ -17,7 +18,6 @@ namespace arima_kana {
       Train tr;
       Order ord;
       PendingList pend;
-      static int timestamp;
 
       Parser() = default;
 
@@ -28,15 +28,6 @@ namespace arima_kana {
         ss >> cmd;
         std::cout << cmd << ' ';
         timestamp = std::stoi(cmd.substr(1, cmd.size() - 2));
-        if(timestamp==183845||timestamp==203452){
-          train_id tr_id("LeavesofGrass");
-          date d("06-17");
-          try {
-            tr.query_train(tr_id, d);
-          } catch (const ErrorException &e) {
-            std::cout << -1 << '\n';
-          }
-        }
         ss >> cmd;
         auto len = cmd.size();
         if (cmd[0] == 'a') {
@@ -312,7 +303,7 @@ namespace arima_kana {
         if (is_success) {
           vector<PendingInfo *> pending = pend.get_pending(it->tr_id, it->d);
           vector<PendingInfo> tmp;
-          for(auto & i : pending) {
+          for (auto &i: pending) {
             tmp.push_back(*i);
           }
           for (auto &p: tmp) {

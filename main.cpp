@@ -7,7 +7,7 @@
 
 using std::cin;
 using std::cout;
-int arima_kana::Parser::timestamp = 0;
+int arima_kana::timestamp = 0;
 
 int main() {
   std::ios::sync_with_stdio(false);

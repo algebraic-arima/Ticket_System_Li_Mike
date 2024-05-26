@@ -38,7 +38,6 @@ namespace arima_kana {
 
       bool operator<(const PendingInfo &rhs) const {
         if (tr_id != rhs.tr_id) return tr_id < rhs.tr_id;
-        if (d != rhs.d) return d < rhs.d;
         return order_time < rhs.order_time;
       }
     };
@@ -65,7 +64,7 @@ namespace arima_kana {
         vector<PendingInfo *> res = pend_list.find(tr_id);
         vector<PendingInfo *> res1;
         for (auto &i: res) {
-          if (i->d < d + 1 && d - 4 < i->d) {
+          if (i->d < d + 4 && d - 4 < i->d) {
             res1.push_back(i);
           }
         }//filter by date
