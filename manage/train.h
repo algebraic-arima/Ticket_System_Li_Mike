@@ -717,7 +717,7 @@ namespace arima_kana {
               if (k == 0) break;
               tmp.time_interval += tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
               tmp.s_t -= tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
-              if (tmp.s_t.h < 0) {
+              while (tmp.s_t.h < 0) {
                 tmp.s_t.h += 24;
                 tmp.s_d -= 1;
               }
@@ -741,8 +741,6 @@ namespace arima_kana {
               tmp.price = tmp2.price[k] - tmp2.price[k - 1];
             }
           }
-
-
         }
 
         for (auto &i: pos_1) {
@@ -756,7 +754,14 @@ namespace arima_kana {
               ++delta;
               s2.h += 24;
             }
-            date origin_date_2 = origin_date_1 + delta;
+            while (!(s2 < e1)) {
+              --delta;
+              s2.h -= 24;
+            }
+            ++delta;
+            date origin_date_2;
+            if (delta > 0) origin_date_2 = origin_date_1 + delta;
+            else origin_date_2 = origin_date_1 - (-delta);
             if (j.e_d < origin_date_2)
               continue;
             else if (origin_date_2 < j.s_d)
@@ -818,6 +823,11 @@ namespace arima_kana {
           });
         }
 
+//        if (timestamp == 1729119) {
+//          for (auto &i: result) {
+//            std::cout << i << '\n';
+//          }
+//        }
         std::cout << result[0] << '\n';
       }
 
