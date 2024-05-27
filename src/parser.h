@@ -28,8 +28,10 @@ namespace arima_kana {
         ss >> cmd;
         std::cout << cmd << ' ';
         timestamp = std::stoi(cmd.substr(1, cmd.size() - 2));
-//        if (timestamp == 1434012 || timestamp == 1275061 || timestamp == 1344165 || timestamp == 1390050) {
-//          tr.query_train(train_id("LeavesofGrass"), date(7, 9));
+//        if (timestamp == 1729119) {
+//          tr.query_train(train_id("DwellerinMannahatt"), date(6, 25));
+//          tr.query_train(train_id("Andmenacingvoice"), date(6, 26));
+//          tr.query_train(train_id("youngfellowsrobus"), date(6, 25));
 //        }//debug
         ss >> cmd;
         if (cmd == "exit") {

@@ -250,8 +250,8 @@ namespace arima_kana {
 
     class Train {
     public:
-      unique_BlockRiver<train_id, TrainInfo, 16, 128, 56, 2000> train_list;
-      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 100> edge_list;
+      unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 200> train_list;
+      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 1000> edge_list;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
@@ -389,10 +389,9 @@ namespace arima_kana {
           error("train not available on this date");
         }
         std::cout << tr.t_id << ' ' << tr.type << '\n';
-        time tmp = tr.start_time;
         int date_index = d - tr.start_date;
+        time tmp = tr.start_time;
         SeatInfo &tr_seat = seat_list.get_train_date(tr.occupied_seat_index, date_index);
-
         for (int i = 0; i < tr.station_num; i++) {
           std::cout << tr.stations[i] << ' ';
           if (i == 0) {
@@ -431,8 +430,8 @@ namespace arima_kana {
           error("train not available on this date");
         }
         os << tr.t_id << ' ' << tr.type << '\n';
-        time tmp = tr.start_time;
         int date_index = d - tr.start_date;
+        time tmp = tr.start_time;
         SeatInfo &tr_seat = seat_list.get_train_date(tr.occupied_seat_index, date_index);
         for (int i = 0; i < tr.station_num; i++) {
           os << tr.stations[i] << ' ';
@@ -568,7 +567,6 @@ namespace arima_kana {
           int seat_num = 0x3fffffff;
           int date_index = origin_start_date - tmp.start_date;
           SeatInfo &tr_seat = seat_list.get_train_date(tmp.occupied_seat_index, date_index);
-
           for (int j = 0; j < tmp.station_num - 1; j++) {
             if (tmp.stations[j] == s) {
               start = j;
@@ -586,13 +584,14 @@ namespace arima_kana {
           if (tmp.stations[tmp.station_num - 1] == t) {
             end = tmp.station_num - 1;
           }
-          int price = tmp.price[end] - tmp.price[start];
+
 
           if (start == -1 || end == -1 || start >= end) {
             i++;
             continue;
           } else {
             time_interval -= tmp.stopover_time[end - 1];
+            int price = tmp.price[end] - tmp.price[start];
             q.t_id = tmp.t_id;
             q.from = s;
             q.to = t;
@@ -847,7 +846,7 @@ namespace arima_kana {
           }
           cur_time += tmp.stopover_time[i];
         }
-        int price = tmp.price[end] - tmp.price[start];
+
         date_index -= st.h / 24;
         if (date_index < 0 || date_index >= tmp.date_num) {
           error("invalid date");
@@ -858,7 +857,7 @@ namespace arima_kana {
         if (start == -1 || end == -1 || start >= end) {
           error("end station not in the train route");
         }
-
+        int price = tmp.price[end] - tmp.price[start];
 
         try {
           seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
@@ -872,15 +871,12 @@ namespace arima_kana {
             // queue
           }
         }
-        if (t_id == train_id("LeavesofGrass") && origin_date == date{7, 9}) {
-          std::ofstream log("log.txt", std::ios::app);
-          if (log.fail()) {
-            std::cout << "log file open failed" << std::endl;
-          }
-          log << timestamp << ": buy success\n";
-          log_train(log, tmp, origin_date);
-          log.close();
-        }
+//        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+//          std::ofstream log("log.txt", std::ios::app);
+//          log << timestamp << ": buy success\n";
+//          log_train(log, tmp, origin_date);
+//          log.close();
+//        }
         return pair(price, 0);
       }
 
@@ -929,15 +925,12 @@ namespace arima_kana {
         } catch (const ErrorException &e) {
           return false;
         }
-        if (t_id == train_id("LeavesofGrass") && origin_date == date{7, 9}) {
-          std::ofstream log("log.txt", std::ios::app);
-          if (log.fail()) {
-            std::cout << "log file open failed" << std::endl;
-          }
-          log << timestamp << ": pending->success\n";
-          log_train(log, tmp, origin_date);
-          log.close();
-        }
+//        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+//          std::ofstream log("log.txt", std::ios::app);
+//          log << timestamp << ": pending->success\n";
+//          log_train(log, tmp, origin_date);
+//          log.close();
+//        }
         return true;
       }
 
@@ -974,15 +967,12 @@ namespace arima_kana {
         date_index -= st.h / 24;// refund on the origin date
         date origin_date = d - st.h / 24;
         seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
-        if (t_id == train_id("LeavesofGrass") && origin_date == date{7, 9}) {
-          std::ofstream log("log.txt", std::ios::app);
-          if (log.fail()) {
-            std::cout << "log file open failed" << std::endl;
-          }
-          log << timestamp << ": refund\n";
-          log_train(log, tmp, origin_date);
-          log.close();
-        }
+//        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
+//          std::ofstream log("log.txt", std::ios::app);
+//          log << timestamp << ": refund\n";
+//          log_train(log, tmp, origin_date);
+//          log.close();
+//        }
       }
 
     };

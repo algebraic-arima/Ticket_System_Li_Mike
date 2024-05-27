@@ -11,6 +11,7 @@
 #include "error.h"
 #include "unique_BNode.h"
 #include "utility.h"
+#include "Buffer.h"
 
 namespace arima_kana {
     template<class K, size_t degree, size_t min_size>
@@ -149,16 +150,17 @@ namespace arima_kana {
       size_t next_sibling(size_t pos) {
         if (list[pos]._par == 0) return 0;
         size_t par = list[pos]._par;
-        size_t i = list[par]._size - 1;
-        while (i > 0 && list[par]._chil[i] != pos) --i;///binary search
+//        size_t i = list[par]._size - 1;
+        size_t i = list[par].lower_bound(list[pos]._key[list[pos]._size - 1]);
+//        while (i > 0 && list[par]._chil[i] != pos) --i;///binary search
         int cnt = 0;
         while (i == list[par]._size - 1) {
           pos = list[pos]._par;
           ++cnt;
           if (list[par]._par == 0) return 0;// no next sibling
           par = list[par]._par;
-          i = list[par]._size - 1;
-          while (i > 0 && list[par]._chil[i] != pos) --i;///binary search
+          i = list[par].lower_bound(list[pos]._key[list[pos]._size - 1]);
+//          while (i > 0 && list[par]._chil[i] != pos) --i;///binary search
         }
         ++i;
         pos = list[par]._chil[i];
@@ -171,16 +173,16 @@ namespace arima_kana {
       size_t prev_sibling(size_t pos) {
         if (list[pos]._par == 0) return 0;
         size_t par = list[pos]._par;
-        size_t i = 0;
-        while (i < list[par]._size - 1 && list[par]._chil[i] != pos) ++i;///binary search
+        size_t i = list[par].lower_bound(list[pos]._key[list[pos]._size - 1]);
+//        while (i < list[par]._size - 1 && list[par]._chil[i] != pos) ++i;///binary search
         int cnt = 0;
         while (i == 0) {
           pos = list[pos]._par;
           ++cnt;
           if (list[par]._par == 0) return 0;// no next sibling
           par = list[par]._par;
-          i = 0;
-          while (i < list[par]._size - 1 && list[par]._chil[i] != pos) ++i;///binary search
+          i = list[par].lower_bound(list[pos]._key[list[pos]._size - 1]);
+//          while (i < list[par]._size - 1 && list[par]._chil[i] != pos) ++i;///binary search
         }
         --i;
         pos = list[par]._chil[i];
@@ -195,8 +197,8 @@ namespace arima_kana {
       size_t next_sp_sibling(size_t pos) {
         if (list[pos]._par == 0) return 0;
         size_t par = list[pos]._par;
-        size_t i = list[par]._size - 1;
-        while (i > 0 && list[par]._chil[i] != pos) --i;///binary search
+        size_t i = list[par].lower_bound(list[pos]._key[list[pos]._size - 1]);
+//        while (i > 0 && list[par]._chil[i] != pos) --i;///binary search
         if (i == list[par]._size - 1) {
           return 0;
         }
@@ -210,8 +212,8 @@ namespace arima_kana {
       size_t prev_sp_sibling(size_t pos) {
         if (list[pos]._par == 0) return 0;
         size_t par = list[pos]._par;
-        size_t i = 0;
-        while (i < list[par]._size - 1 && list[par]._chil[i] != pos) ++i;///binary search
+        size_t i = list[par].lower_bound(list[pos]._key[list[pos]._size - 1]);
+//        while (i < list[par]._size - 1 && list[par]._chil[i] != pos) ++i;///binary search
         if (i == 0) {
           return 0;
         }
@@ -301,7 +303,7 @@ namespace arima_kana {
       size_t free_num = 0;
       std::fstream index_filer;
       std::string index_file;
-      arima_kana::vector<Node> list;
+      vector<Node> list;
 //      arima_kana::vector<size_t> free_pos;
 
       explicit unique_BPTree(const std::string &ifn) : index_file(ifn + "_index") {
@@ -359,20 +361,6 @@ namespace arima_kana {
         index_filer.close();
       }
 
-      void read_node(Node &dn, size_t pos) {
-        index_filer.open(index_file, std::ios::in | std::ios::binary);
-        index_filer.seekg(3 * SIZE_T + (pos - 1) * SIZE_NODE);
-        index_filer.read(reinterpret_cast<char *>(&dn), SIZE_NODE);
-        index_filer.close();
-      }
-
-      void write_node(Node &dn, size_t pos) {
-        index_filer.open(index_file, std::ios::in | std::ios::out | std::ios::binary);
-        index_filer.seekp(3 * SIZE_T + (pos - 1) * SIZE_NODE);
-        index_filer.write(reinterpret_cast<char *>(&dn), SIZE_NODE);
-        index_filer.close();
-      }
-
       void insert(const K &k, size_t val) {
         if (root == 0) {
           Node tmp;
@@ -394,8 +382,7 @@ namespace arima_kana {
 
         Node &node = list[pos];
         try { node.insert_pair(k, val); }
-        catch (ErrorException &e) {
-          std::cout << e.getMessage() << '\n';
+        catch (...) {
           return;
         }
         if (node._size == degree) {

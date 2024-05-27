@@ -1,7 +1,7 @@
 #ifndef TICKET_SYSTEM_LI_MIKE_ACCOUNT_H
 #define TICKET_SYSTEM_LI_MIKE_ACCOUNT_H
 
-#include "unique_BlockRiver.h"
+#include "BlockRiver.h"
 #include <map>
 
 namespace arima_kana {
@@ -41,7 +41,7 @@ namespace arima_kana {
 
     class Account {
     public:
-      unique_BlockRiver<acc_id, AccountInfo, 32, 200, 90, 100> list;
+      BlockRiver<acc_id, AccountInfo, 32, 32, 10, 1000> list;
       std::map<acc_id, short> login_list;
 
       explicit Account(const std::string &af = "1account") :
@@ -59,7 +59,7 @@ namespace arima_kana {
           return false; //not logged in
         if (it->second <= usr.priv)
           return false; //privilege not enough
-        if (list.find(usr.id))
+        if (!list.find(usr.id).empty())
           return false;//exists
         list.insert(usr.id, usr);
         return true;
@@ -67,16 +67,16 @@ namespace arima_kana {
 
       bool login(const acc_id &id, const passwd &pw) {
         auto pos = list.find(id);
-        if (!pos)
+        if (pos.size() != 1)
           return false;//not found or duplicated
         if (login_list.find(id) != login_list.end())
           return false;
-        AccountInfo * tmp = list.find(id);
-        if (!tmp)
+        vector<AccountInfo *> tmp = list.find(id);
+        if (tmp.size() != 1)
           return false;
-        if (tmp->pw != pw)
+        if (tmp[0]->pw != pw)
           return false;
-        login_list.insert(std::make_pair(id, tmp->priv));
+        login_list.insert(std::make_pair(id, tmp[0]->priv));
         return true;
       }
 
@@ -93,14 +93,14 @@ namespace arima_kana {
         if (it == login_list.end()) {
           error("get_usr: cur user not logged in");
         }
-        AccountInfo * pos = list.find(id);
-        if (!pos) {
+        vector<AccountInfo *> pos = list.find(id);
+        if (pos.size() != 1) {
           error("User not found or duplicated");
         }
-        if (c_id != id && it->second <= pos->priv) {
+        if (c_id != id && it->second <= pos[0]->priv) {
           error("privilege not enough");
         }
-        return *pos;
+        return *pos[0];
       }
 
       short get_priv(const acc_id &c_id) {
