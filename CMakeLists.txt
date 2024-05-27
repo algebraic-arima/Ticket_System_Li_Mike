@@ -16,6 +16,10 @@ add_executable(code
         src/BPtree/BlockRiver.h
         src/BPtree/BPtree.h
         src/BPtree/DataNode.h
+        src/unique_BPtree/unique_BNode.h
+        src/unique_BPtree/unique_BlockRiver.h
+        src/unique_BPtree/unique_BPtree.h
+        src/unique_BPtree/unique_DataNode.h
         src/utility/error.h
         src/utility/utility.h
         src/utility/Buffer.h

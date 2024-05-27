@@ -14,7 +14,7 @@
 #include "Buffer.h"
 
 namespace arima_kana {
-    template<class K, class V, size_t block,size_t bp_max,size_t bp_min,size_t buf_max>
+    template<class K, class V, size_t block, size_t bp_max, size_t bp_min, size_t buf_max>
     class BlockRiver {
     public:
 
@@ -53,7 +53,6 @@ namespace arima_kana {
       }
 
       ~BlockRiver() {
-//        std::cout << "~BlockRiver\n";
         write_data();
       }
 
@@ -113,7 +112,9 @@ namespace arima_kana {
         }// kv is greater than the maximum
         DNode &tmp = data_list[it];
         try { tmp.insert_pair(k, v); }
-        catch (...) { return; }
+        catch (...) {
+          return;
+        }
         if (tmp.size >= block) {
           DNode new_node;
           new_node.size = tmp.size / 2;
@@ -144,12 +145,14 @@ namespace arima_kana {
           }
         }
         try { tmp.remove_pair(k, v); }
-        catch (...) { return; }
+        catch (...) {
+          return;
+        }
       }
 
       /// for multi find
-      vector<V*> find(const K &k) {
-        vector<V*> res;
+      vector<V *> find(const K &k) {
+        vector<V *> res;
         vector<size_t> tmp = list.find(k);
         for (int i = 0; i < tmp.size(); i++) {
           DNode &t = data_list[tmp[i]];

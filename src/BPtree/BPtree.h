@@ -19,7 +19,7 @@ namespace arima_kana {
       typedef BNode<K, V, degree> Node;
       typedef pair<K, V> p;
 
-      size_t vacant_pos() {
+      inline size_t vacant_pos() {
 //        if (free_pos.empty()) {
 //          list.push_back(Node());
 //          return ++size;

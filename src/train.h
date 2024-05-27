@@ -6,6 +6,7 @@
 #include <sstream>
 #include "utility.h"
 #include "BlockRiver.h"
+#include "unique_BlockRiver.h"
 #include "seat.h"
 
 
@@ -249,7 +250,7 @@ namespace arima_kana {
 
     class Train {
     public:
-      BlockRiver<train_id, TrainInfo, 32, 16, 7, 20> train_list;
+      unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 2000> train_list;
       BlockRiver<station_name, EdgeInfo, 22, 22, 10, 10000> edge_list;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
@@ -297,9 +298,9 @@ namespace arima_kana {
               break;
           }
         }
-        vector<TrainInfo *> t = train_list.find(tmp.t_id);
-        if (t.size() != 0) {
-          error("train_id_duplicated");
+        TrainInfo *t = train_list.find(tmp.t_id);
+        if (t != nullptr) {
+          error("train id duplicated");
         }
         ss.str(stations);
         ss.clear();
@@ -344,11 +345,8 @@ namespace arima_kana {
       }
 
       void release_train(const train_id &t_id) {
-        vector<TrainInfo *> t = train_list.find(t_id);
-        if (t.size() != 1) {
-          error("train not found or duplicated");
-        }
-        TrainInfo &tmp = *t[0];
+        TrainInfo *t = train_list.find(t_id);
+        TrainInfo &tmp = *t;
         if (tmp.released) {
           error("train has been released");
         }
@@ -374,22 +372,16 @@ namespace arima_kana {
       }
 
       void delete_train(const train_id &t_id) {
-        vector<TrainInfo *> t = train_list.find(t_id);
-        if (t.size() != 1) {
-          error("train not found or duplicated");
-        }
-        if (t[0]->released) {
+        TrainInfo *t = train_list.find(t_id);
+        if (t->released) {
           error("train has been released");
         }
-        train_list.remove(t_id, *t[0]);
+        train_list.remove(t_id);
       }
 
       void query_train(const train_id &id, const date &d) {
-        vector<TrainInfo *> t = train_list.find(id);
-        if (t.size() != 1) {
-          error("train not found or duplicated");
-        }
-        print_train(*t[0], d);
+        TrainInfo *t = train_list.find(id);
+        print_train(*t, d);
       }
 
       void print_train(const TrainInfo &tr, date d) {
@@ -560,12 +552,9 @@ namespace arima_kana {
         int i = 0;
         vector<query_info> res;
         while (i < res_train.size()) {
-          vector<TrainInfo *> tr = train_list.find(res_train[i].first);
-          if (tr.size() != 1) {
-            error("train not found or duplicated");
-          }
+          TrainInfo *tr = train_list.find(res_train[i].first);
 
-          TrainInfo &tmp = *tr[0];
+          TrainInfo &tmp = *tr;
           SeatInfo &tr_seat = seat_list.get_train(tmp.occupied_seat_index);
           date origin_start_date = d - res_train[i].second.h / 24;
           if (origin_start_date < tmp.start_date || tmp.start_date + tmp.date_num - 1 < origin_start_date) {
@@ -663,11 +652,8 @@ namespace arima_kana {
 
         for (auto &i: e) {
           train_id t1 = i->t_id;
-          vector<TrainInfo *> tr1 = train_list.find(t1);
-          if (tr1.size() != 1) {
-            error("train not found or duplicated");
-          }
-          TrainInfo &tmp1 = *tr1[0];
+          TrainInfo *tr1 = train_list.find(t1);
+          TrainInfo &tmp1 = *tr1;
           date origin_start_date = d - i->start_time.h / 24;
           if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num - 1 < origin_start_date) {
             continue;
@@ -704,11 +690,8 @@ namespace arima_kana {
         vector<candidate> pos_2;
         for (auto &j: f) {
           train_id t2 = j->t_id;
-          vector<TrainInfo *> tr2 = train_list.find(t2);
-          if (tr2.size() != 1) {
-            error("train not found or duplicated");
-          }
-          TrainInfo &tmp2 = *tr2[0];
+          TrainInfo *tr2 = train_list.find(t2);
+          TrainInfo &tmp2 = *tr2;
           int st2 = -1;
           candidate tmp;
           for (int k = tmp2.station_num - 1; k >= 0; --k) {
@@ -836,11 +819,8 @@ namespace arima_kana {
                                 const station_name &to,
                                 const date &d,
                                 int num, bool queue = false) {
-        vector<TrainInfo *> t = train_list.find(t_id);
-        if (t.size() != 1) {
-          error("train not found or duplicated");
-        }
-        TrainInfo &tmp = *t[0];
+        TrainInfo *t = train_list.find(t_id);
+        TrainInfo &tmp = *t;
         if (!tmp.released) {
           error("train not released");
         }
@@ -906,12 +886,9 @@ namespace arima_kana {
                           const station_name &to,
                           const date &d,
                           int num) {
-        vector<TrainInfo *> t = train_list.find(t_id);
+        TrainInfo *t = train_list.find(t_id);
         time st, ed;
-        if (t.size() != 1) {
-          return false;
-        }
-        TrainInfo &tmp = *t[0];
+        TrainInfo &tmp = *t;
         if (!tmp.released) {
           return false;
         }
@@ -961,11 +938,8 @@ namespace arima_kana {
                          const station_name &to,
                          const date &d,
                          int num) {
-        vector<TrainInfo *> t = train_list.find(t_id);
-        if (t.size() != 1) {
-          error("train not found or duplicated");
-        }
-        TrainInfo &tmp = *t[0];
+        TrainInfo *t = train_list.find(t_id);
+        TrainInfo &tmp = *t;
         int date_index = d - tmp.start_date;
         int start = -1, end = -1;
         time cur_time = tmp.start_time;
