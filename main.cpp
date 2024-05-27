@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "parser.h"
 
 using std::cin;
@@ -7,24 +8,26 @@ using std::cout;
 int arima_kana::timestamp = 0;
 
 int main() {
+  std::ofstream log("log.txt", std::ios::out);
+  log.close();
   std::ios::sync_with_stdio(false);
 //  std::cin.tie(nullptr);
 //  std::cout.tie(nullptr);
   std::string str;
   arima_kana::Parser parser;
   while (true) {
-    try{
+    try {
       getline(cin, str);
       if (str.empty()) continue;
       if (!parser.handle(str))
         break;
-    }catch(const ErrorException &e){
+    } catch (const ErrorException &e) {
       cout << e.getMessage() << '\n';
     }
-    catch(const std::exception &e){
+    catch (const std::exception &e) {
       cout << e.what() << '\n';
     }
-    catch(...){
+    catch (...) {
       cout << "Unknown error\n";
     }
   }

@@ -8,15 +8,13 @@
 namespace arima_kana {
 
     struct SeatInfo {
-      int seat[100][100] = {0};
+      int seat[100] = {0};
 
       SeatInfo() = default;
 
-      SeatInfo(int date_num, int station_num, int seat_num) {
-        for (int i = 0; i < date_num; i++) {
-          for (int j = 0; j < station_num; j++) {
-            seat[i][j] = seat_num;
-          }
+      SeatInfo(int station_num, int seat_num) {
+        for (int j = 0; j < station_num; j++) {
+          seat[j] = seat_num;
         }
       }
     };
@@ -63,22 +61,27 @@ namespace arima_kana {
 
       void add_new_train(int d, int s, int n) {
         train_num++;
-        SeatInfo tmp(d, s, n);
-        seat_list[train_num] = tmp;
+        SeatInfo tmp(s, n), e;
+        int cnt = 100;
         file.open(name, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
-        file.write(reinterpret_cast<char *>(&tmp), sizeof(SeatInfo));
+        while (d--) {
+          file.write(reinterpret_cast<char *>(&tmp), sizeof(SeatInfo));
+          cnt--;
+        }
+        while (cnt--)
+          file.write(reinterpret_cast<char *>(&e), sizeof(SeatInfo));
         file.close();
       }
 
-      SeatInfo &get_train(int pos) {
-        return seat_list[pos];
+      SeatInfo &get_train_date(int pos, int date_ind) {
+        return seat_list[(pos - 1) * 100 + date_ind + 1];
       }
 
       int search_seat(int pos, int date_ind, int l, int r) {
         int ans = 2e5;
-        SeatInfo &n = seat_list[pos];
+        SeatInfo &n = get_train_date(pos, date_ind);
         for (int i = l; i < r; i++) {
-          int tmp = n.seat[date_ind][i];
+          int tmp = n.seat[i];
           if (tmp < ans) {
             ans = tmp;
           }
@@ -90,17 +93,17 @@ namespace arima_kana {
       /// start from the l-th station, end at the r-th station
       /// so int i = l; i < r; i++
       void buy_seat(int pos, int date_ind, int l, int r, int val) {
-        SeatInfo &tmp = seat_list[pos];
+        SeatInfo &tmp = get_train_date(pos, date_ind);
         bool flag = true;
         for (int i = l; i < r; i++) {
-          if (tmp.seat[date_ind][i] < val) {
+          if (tmp.seat[i] < val) {
             flag = false;
             break;
           }
         }
         if (flag) {
           for (int i = l; i < r; i++) {
-            tmp.seat[date_ind][i] -= val;
+            tmp.seat[i] -= val;
           }
         } else {
           error("seat not enough");
@@ -108,9 +111,9 @@ namespace arima_kana {
       }
 
       void refund_seat(int pos, int date_ind, int l, int r, int val) {
-        SeatInfo &tmp = seat_list[pos];
+        SeatInfo &tmp = get_train_date(pos, date_ind);
         for (int i = l; i < r; i++) {
-          tmp.seat[date_ind][i] += val;
+          tmp.seat[i] += val;
         }
       }
     };
