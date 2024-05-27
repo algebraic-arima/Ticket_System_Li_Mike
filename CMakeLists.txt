@@ -31,4 +31,5 @@ add_executable(code
         src/seat.h
         src/order.h
         src/pending.h
+        src/utility/timer.h
 )
