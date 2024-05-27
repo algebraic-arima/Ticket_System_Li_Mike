@@ -165,6 +165,20 @@ namespace arima_kana {
         return res;
       }
 
+      vector<V> find(const K &k, bool flag) {
+        vector<V> res;
+        vector<size_t> tmp = list.find(k);
+        for (int i = 0; i < tmp.size(); i++) {
+          DNode &t = data_list[tmp[i]];
+          for (int j = 0; j < t.size; j++) {
+            if (t._data[j].first == k) {
+              res.push_back(t._data[j].second);
+            }
+          }
+        }
+        return res;
+      }
+
       void print() {
         list.print();
         for (int i = 1; i <= block_num; i++) {
