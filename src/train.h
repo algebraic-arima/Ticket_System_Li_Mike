@@ -521,29 +521,29 @@ namespace arima_kana {
                         bool is_time) {
         vector<pair<train_id, time>> res_train;
         {
-          vector<EdgeInfo *> e = edge_list.find(s);
-          vector<EdgeInfo *> f = edge_list.find(t);
+          vector<EdgeInfo> e = edge_list.find(s, true);
+          vector<EdgeInfo> f = edge_list.find(t, true);
           if (e.size() == 0 || f.size() == 0) {
             error("no such station included in released trains");
           }
           int p1 = 0, p2 = 0;
 
           while (p1 < e.size() && p2 < f.size()) {
-            while (p1 < e.size() && e[p1]->t_id < f[p2]->t_id) {
+            while (p1 < e.size() && e[p1].t_id < f[p2].t_id) {
               ++p1;
             }
             if (p1 >= e.size()) break;
-            if (e[p1]->t_id == f[p2]->t_id) {
-              res_train.push_back(pair(e[p1]->t_id, e[p1]->start_time));
+            if (e[p1].t_id == f[p2].t_id) {
+              res_train.push_back(pair(e[p1].t_id, e[p1].start_time));
               ++p1, ++p2;
             }
             if (p1 >= e.size() || p2 >= f.size()) break;
-            while (p2 < f.size() && f[p2]->t_id < e[p1]->t_id) {
+            while (p2 < f.size() && f[p2].t_id < e[p1].t_id) {
               ++p2;
             }
             if (p1 == e.size() || p2 >= f.size()) break;
-            if (e[p1]->t_id == f[p2]->t_id) {
-              res_train.push_back(pair(e[p1]->t_id, e[p1]->start_time));
+            if (e[p1].t_id == f[p2].t_id) {
+              res_train.push_back(pair(e[p1].t_id, e[p1].start_time));
               ++p1, ++p2;
             }
           }
