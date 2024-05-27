@@ -164,7 +164,7 @@ namespace arima_kana {
         data = alloc.allocate(_capacity);
       }
 
-      explicit vector(const T &val, size_t cap = 100) : _size(cap), _capacity(cap) {
+      explicit vector(const T &val, size_t cap = 32) : _size(cap), _capacity(cap) {
         data = alloc.allocate(_capacity);
         for (size_t i = 0; i < _size; i++) {
           alloc.construct(data + i, val);
