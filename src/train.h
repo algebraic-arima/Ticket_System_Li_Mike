@@ -228,10 +228,6 @@ namespace arima_kana {
     public:
       station_name from, to;
       time start_time;
-      time arrive_time;
-      // may exceed 24, and means the next day or later
-      int travel_time = 0;
-      int price = 0;
       train_id t_id;
 
       EdgeInfo() = default;
@@ -357,9 +353,6 @@ namespace arima_kana {
           edge.from = tmp.stations[i];
           edge.to = tmp.stations[i + 1];
           edge.start_time = cur_time;
-          edge.arrive_time = cur_time + tmp.travel_time[i];
-          edge.travel_time = tmp.travel_time[i];
-          edge.price = tmp.price[i + 1] - tmp.price[i];
           edge.t_id = t_id;
           edge_list.insert(edge.from, edge);
           cur_time += tmp.travel_time[i] + tmp.stopover_time[i];
@@ -642,8 +635,8 @@ namespace arima_kana {
                           const station_name &t,
                           const date &d,
                           bool is_time) {
-        vector<EdgeInfo *> e = edge_list.find(s);
-        vector<EdgeInfo *> f = edge_list.find(t);
+        vector<EdgeInfo> e = edge_list.find(s, true);
+        vector<EdgeInfo> f = edge_list.find(t, true);
         if (e.size() == 0 || f.size() == 0) {
           error("no such station included in released trains");
         }
@@ -652,10 +645,10 @@ namespace arima_kana {
         vector<candidate> pos_1;
 
         for (auto &i: e) {
-          train_id t1 = i->t_id;
+          train_id t1 = i.t_id;
           TrainInfo *tr1 = train_list.find(t1);
           TrainInfo &tmp1 = *tr1;
-          date origin_start_date = d - i->start_time.h / 24;
+          date origin_start_date = d - i.start_time.h / 24;
           if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num - 1 < origin_start_date) {
             continue;
           }// not in the sale date
@@ -675,8 +668,8 @@ namespace arima_kana {
               tmp.t_id = t1;
               tmp.s_d = tmp1.start_date;
               tmp.e_d = tmp1.start_date + (tmp1.date_num - 1);
-              tmp.s_t = i->start_time;
-              tmp.e_t = i->start_time + tmp1.travel_time[j];
+              tmp.s_t = i.start_time;
+              tmp.e_t = i.start_time + tmp1.travel_time[j];
               // from s_d to e_d, s_t to e_t every day
               tmp.time_interval = tmp1.travel_time[j];
               tmp.from = j;
@@ -690,7 +683,7 @@ namespace arima_kana {
 
         vector<candidate> pos_2;
         for (auto &j: f) {
-          train_id t2 = j->t_id;
+          train_id t2 = j.t_id;
           TrainInfo *tr2 = train_list.find(t2);
           TrainInfo &tmp2 = *tr2;
           int st2 = -1;
@@ -714,8 +707,8 @@ namespace arima_kana {
               tmp.t_id = t2;
               tmp.s_d = tmp2.start_date;
               tmp.e_d = tmp2.start_date + (tmp2.date_num - 1);
-              tmp.e_t = j->start_time - tmp2.stopover_time[k - 1];
-              tmp.s_t = j->start_time - (tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1]);
+              tmp.e_t = j.start_time - tmp2.stopover_time[k - 1];
+              tmp.s_t = j.start_time - (tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1]);
               // from s_d to e_d, s_t to e_t every day
               tmp.time_interval = tmp2.travel_time[k - 1];
               tmp.from = k - 1;
