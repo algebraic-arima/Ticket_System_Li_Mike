@@ -39,43 +39,44 @@ namespace arima_kana {
           return false;
         }
         auto len = cmd.size();
-        if (cmd[0] == 'a') {
-          if (cmd[len - 3] == 's') {
+        char c1 = cmd[0], c2 = cmd[len - 3];
+        if (c1 == 'a') {
+          if (c2 == 's') {
             handle_add_user();
-          } else if (cmd[len - 3] == 'a') {
+          } else if (c2 == 'a') {
             handle_add_train();
           }
-        } else if (cmd[0] == 'l') {
-          if (cmd[len - 3] == 'g') {
+        } else if (c1 == 'l') {
+          if (c2 == 'g') {
             handle_login();
-          } else if (cmd[len - 3] == 'o') {
+          } else if (c2 == 'o') {
             handle_logout();
           }
-        } else if (cmd[0] == 'q') {
-          if (cmd[len - 3] == 'i') {
+        } else if (c1 == 'q') {
+          if (c2 == 'i') {
             handle_query_profile();
-          } else if (cmd[len - 3] == 'a') {
+          } else if (c2 == 'a') {
             handle_query_train();
-          } else if (cmd[len - 3] == 'k') {
+          } else if (c2 == 'k') {
             handle_query_ticket();
-          } else if (cmd[len - 3] == 'f') {
+          } else if (c2 == 'f') {
             handle_query_transfer();
-          } else if (cmd[len - 3] == 'd') {
+          } else if (c2 == 'd') {
             handle_query_order();
           }
-        } else if (cmd[0] == 'm') {
+        } else if (c1 == 'm') {
           handle_modify_profile();
-        } else if (cmd[0] == 'd') {
+        } else if (c1 == 'd') {
           handle_delete_train();
-        } else if (cmd[0] == 'r') {
-          if (cmd[len - 3] == 'a') {
+        } else if (c1 == 'r') {
+          if (c2 == 'a') {
             handle_release_train();
-          } else if (cmd[len - 3] == 'k') {
+          } else if (c2 == 'k') {
             handle_refund_ticket();
           }
-        } else if (cmd[0] == 'b') {
+        } else if (c1 == 'b') {
           handle_buy_ticket();
-        } else if (cmd[0] == 'c') {
+        } else if (c1 == 'c') {
           // clean
         }
         return true;

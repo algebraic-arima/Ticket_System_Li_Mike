@@ -7,22 +7,24 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 
 include_directories(src)
-include_directories(manage)
+include_directories(src/BPtree)
+include_directories(src/unique_BPtree)
+include_directories(src/utility)
 
 add_executable(code
-        src/BNode.h
-        src/BlockRiver.h
-        src/BPtree.h
-        src/DataNode.h
-        src/error.h
-        src/utility.h
-        src/Buffer.h
-        src/map.h
-        manage/account.h
+        src/BPtree/BNode.h
+        src/BPtree/BlockRiver.h
+        src/BPtree/BPtree.h
+        src/BPtree/DataNode.h
+        src/utility/error.h
+        src/utility/utility.h
+        src/utility/Buffer.h
+        src/utility/map.h
+        src/account.h
         main.cpp
-        manage/train.h
-        manage/parser.h
-        manage/seat.h
-        manage/order.h
-        manage/pending.h
+        src/train.h
+        src/parser.h
+        src/seat.h
+        src/order.h
+        src/pending.h
 )
