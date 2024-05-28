@@ -14,14 +14,15 @@ namespace arima_kana {
     public:
       std::string data_name;
       std::fstream data_filer;
-      size_t num = 0;
-      unique_BlockRiver<K, size_t, block, bp_max, bp_min, buf_max> index_list;
-      V *buffer;
-      size_t buffer_pos = 0;
+      int num = 0;
+      unique_BlockRiver<K, int, block, bp_max, bp_min, buf_max> index_list;
+      List_Map_Buffer<V, size_t, 1, buf_max> list;
 
       explicit unique_ind_ext_BPtree(const std::string &df) :
               data_name(df + "_data"),
-              index_list(df) {
+              index_list(df),
+              list(df) {
+
         data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
         if (!data_filer.is_open()) {
           data_filer.close();
@@ -30,10 +31,11 @@ namespace arima_kana {
           data_filer.close();
           read_data();
         }
-        buffer = new V;
       }
 
-      inline void init_data() {
+      inline
+
+      void init_data() {
         data_filer.open(data_name, std::ios::out | std::ios::binary);
         data_filer.write(reinterpret_cast<char *>(&num), sizeof(size_t));
         data_filer.close();
@@ -61,28 +63,13 @@ namespace arima_kana {
         if (pos == 0) {
           return nullptr;
         }
-        data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
-        data_filer.seekg((pos - 1) * sizeof(V) + sizeof(size_t), std::ios::beg);
-        data_filer.read(reinterpret_cast<char *>(buffer), sizeof(V));
-        data_filer.close();
-        buffer_pos = pos;
-        return buffer;
-      }
-
-      void update() {
-        data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
-        data_filer.seekp((buffer_pos - 1) * sizeof(V) + sizeof(size_t), std::ios::beg);
-        data_filer.write(reinterpret_cast<char *>(buffer), sizeof(V));
-        data_filer.close();
+        return &list[pos];
       }
 
       ~unique_ind_ext_BPtree() {
         data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
         data_filer.write(reinterpret_cast<char *>(&num), sizeof(size_t));
-        data_filer.seekp((buffer_pos - 1) * sizeof(V) + sizeof(size_t), std::ios::beg);
-        data_filer.write(reinterpret_cast<char *>(buffer), sizeof(V));
         data_filer.close();
-        delete buffer;
       }
 
     };

@@ -24,7 +24,8 @@ namespace arima_kana {
       int train_num = 0;
       std::fstream file;
       std::string name;
-      List_Map_Buffer<SeatInfo, int, 1, 1> seat_list;
+      List_Map_Buffer<SeatInfo, int, 1, 100> seat_list;
+      // 40kb
 
       static constexpr int SIZE_INT = sizeof(int);
 

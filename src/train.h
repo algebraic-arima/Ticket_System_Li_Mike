@@ -254,9 +254,12 @@ namespace arima_kana {
 
     class Train {
     public:
-      unique_ind_ext_BPtree<train_id, TrainInfo, 16, 128, 62, 1> train_list;
-      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 32> edge_list;
-      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 32> station_train_to_ind;
+      unique_ind_ext_BPtree<train_id, TrainInfo, 156, 192, 94, 1000> train_list;
+      // (22+4)*156*1000=40kb
+      BlockRiver<station_name, EdgeInfo, 26, 26, 12, 60> edge_list;
+      // (44+108)*26*60=400kb
+      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 24, 64, 30, 60> station_train_to_ind;
+      // (44+22+108)*24*100=400kb
       Seat seat_list;
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
@@ -356,7 +359,6 @@ namespace arima_kana {
           error("train has been released");
         }
         tmp->released = true;
-        train_list.update();
         time cur_time = tmp->start_time;
         EdgeInfo edge;
         edge.start_date = tmp->start_date;
