@@ -12,22 +12,22 @@
 
 namespace arima_kana {
 
-    Timer timer1("clean");
-    Timer timer2("exit");
-    Timer timer3("add_user");
-    Timer timer4("login");
-    Timer timer5("logout");
-    Timer timer6("query_profile");
-    Timer timer7("modify_profile");
-    Timer timer8("add_train");
-    Timer timer9("delete_train");
-    Timer timer10("release_train");
-    Timer timer11("query_train");
-    Timer timer12("query_ticket");
-    Timer timer13("query_transfer");
-    Timer timer14("buy_ticket");
-    Timer timer15("query_order");
-    Timer timer16("refund_ticket");
+//    Timer timer1("clean");
+//    Timer timer2("exit");
+//    Timer timer3("add_user");
+//    Timer timer4("login");
+//    Timer timer5("logout");
+//    Timer timer6("query_profile");
+//    Timer timer7("modify_profile");
+//    Timer timer8("add_train");
+//    Timer timer9("delete_train");
+//    Timer timer10("release_train");
+//    Timer timer11("query_train");
+//    Timer timer12("query_ticket");
+//    Timer timer13("query_transfer");
+//    Timer timer14("buy_ticket");
+//    Timer timer15("query_order");
+//    Timer timer16("refund_ticket");
 
     std::stringstream ss;
     Account acc;
@@ -418,68 +418,68 @@ namespace arima_kana {
       char c1 = cmd[0], c2 = cmd[len - 3];
       if (c1 == 'a') {
         if (c2 == 's') {
-          timer3.start();
+//          timer3.start();
           handle_add_user();
-          timer3.stop();
+//          timer3.stop();
         } else if (c2 == 'a') {
-          timer8.start();
+//          timer8.start();
           handle_add_train();
-          timer8.stop();
+//          timer8.stop();
         }
       } else if (c1 == 'l') {
         if (c2 == 'g') {
-          timer4.start();
+//          timer4.start();
           handle_login();
-          timer4.stop();
+//          timer4.stop();
         } else if (c2 == 'o') {
-          timer5.start();
+//          timer5.start();
           handle_logout();
-          timer5.stop();
+//          timer5.stop();
         }
       } else if (c1 == 'q') {
         if (c2 == 'i') {
-          timer6.start();
+//          timer6.start();
           handle_query_profile();
-          timer6.stop();
+//          timer6.stop();
         } else if (c2 == 'a') {
-          timer11.start();
+//          timer11.start();
           handle_query_train();
-          timer11.stop();
+//          timer11.stop();
         } else if (c2 == 'k') {
-          timer12.start();
+//          timer12.start();
           handle_query_ticket();
-          timer12.stop();
+//          timer12.stop();
         } else if (c2 == 'f') {
-          timer13.start();
+//          timer13.start();
           handle_query_transfer();
-          timer13.stop();
+//          timer13.stop();
         } else if (c2 == 'd') {
-          timer15.start();
+//          timer15.start();
           handle_query_order();
-          timer15.stop();
+//          timer15.stop();
         }
       } else if (c1 == 'm') {
-        timer7.start();
+//        timer7.start();
         handle_modify_profile();
-        timer7.stop();
+//        timer7.stop();
       } else if (c1 == 'd') {
-        timer9.start();
+//        timer9.start();
         handle_delete_train();
-        timer9.stop();
+//        timer9.stop();
       } else if (c1 == 'r') {
         if (c2 == 'a') {
-          timer10.start();
+//          timer10.start();
           handle_release_train();
-          timer10.stop();
+//          timer10.stop();
         } else if (c2 == 'k') {
-          timer16.start();
+//          timer16.start();
           handle_refund_ticket();
-          timer16.stop();
+//          timer16.stop();
         }
       } else if (c1 == 'b') {
-        timer14.start();
+//        timer14.start();
         handle_buy_ticket();
-        timer14.stop();
+//        timer14.stop();
       } else if (c1 == 'c') {
         // clean
       }
