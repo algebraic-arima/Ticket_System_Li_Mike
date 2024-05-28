@@ -226,8 +226,15 @@ namespace arima_kana {
 
     class EdgeInfo {
     public:
-      station_name from, to;
-      time start_time;
+      station_name from;
+      time start_time{};
+      int station_ind = 0;
+      int stop_time = 0;
+      date start_date{};
+      int duration_date = 0;
+      int price_till_now = 0;
+      int occupied_seat_index = 0;
+      int max_posssible_seat = 0;
       train_id t_id;
 
       EdgeInfo() = default;
@@ -248,11 +255,13 @@ namespace arima_kana {
     public:
       unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 60> train_list;
       BlockRiver<station_name, EdgeInfo, 22, 22, 10, 100> edge_list;
+      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 60> station_train_to_ind;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
 
-      Train() : train_list("2train"), edge_list("3edge") {}
+      Train() : train_list("2train"), edge_list("3edge"),
+                station_train_to_ind("7statrtoi") {}
 
       void add_train(const std::string &param) {
         TrainInfo tmp;
@@ -348,20 +357,35 @@ namespace arima_kana {
         }
         tmp.released = true;
         time cur_time = tmp.start_time;
-        for (int i = 0; i < tmp.station_num - 1; i++) {
-          EdgeInfo edge;
+        EdgeInfo edge;
+        edge.start_date = tmp.start_date;
+        edge.duration_date = tmp.date_num;
+        edge.max_posssible_seat = tmp.seat_num;
+        edge.occupied_seat_index = tmp.occupied_seat_index;
+        int i;
+        for (i = 0; i < tmp.station_num - 1; i++) {
           edge.from = tmp.stations[i];
-          edge.to = tmp.stations[i + 1];
+          edge.station_ind = i;
+          if (i != 0) {
+            edge.stop_time = tmp.stopover_time[i - 1];
+          } else {
+            edge.stop_time = 0;
+          }
           edge.start_time = cur_time;
           edge.t_id = t_id;
+          edge.price_till_now = tmp.price[i];
           edge_list.insert(edge.from, edge);
           cur_time += tmp.travel_time[i] + tmp.stopover_time[i];
+          station_train_to_ind.insert(pair(tmp.stations[i], t_id), edge);
         }
-        EdgeInfo edge;
-        edge.from = tmp.stations[tmp.station_num - 1];
+        edge.from = tmp.stations[i];
         edge.start_time = cur_time;
+        edge.station_ind = i;
+        edge.stop_time = 0;
+        edge.price_till_now = tmp.price[i];
         edge.t_id = t_id;
         edge_list.insert(edge.from, edge);
+        station_train_to_ind.insert(pair(tmp.stations[i], t_id), edge);
       }
 
       void delete_train(const train_id &t_id) {
@@ -374,43 +398,43 @@ namespace arima_kana {
 
       void query_train(const train_id &id, const date &d) {
         TrainInfo *t = train_list.find(id);
-        print_train(*t, d);
+        print_train(t, d);
       }
 
-      void print_train(const TrainInfo &tr, date d) {
-        if (d < tr.start_date || tr.start_date + tr.date_num - 1 < d) {
+      void print_train(TrainInfo *tr, date d) {
+        if (d < tr->start_date || tr->start_date + tr->date_num - 1 < d) {
           error("train not available on this date");
         }
-        std::cout << tr.t_id << ' ' << tr.type << '\n';
-        int date_index = d - tr.start_date;
-        time tmp = tr.start_time;
-        SeatInfo &tr_seat = seat_list.get_train_date(tr.occupied_seat_index, date_index);
-        for (int i = 0; i < tr.station_num; i++) {
-          std::cout << tr.stations[i] << ' ';
+        std::cout << tr->t_id << ' ' << tr->type << '\n';
+        int date_index = d - tr->start_date;
+        time tmp = tr->start_time;
+        SeatInfo &tr_seat = seat_list.get_train_date(tr->occupied_seat_index, date_index);
+        for (int i = 0; i < tr->station_num; i++) {
+          std::cout << tr->stations[i] << ' ';
           if (i == 0) {
             std::cout << "xx-xx xx:xx -> ";
           } else {
             std::cout << d << ' ' << tmp << " -> ";
-            if (i != tr.station_num - 1) {
-              tmp += tr.stopover_time[i - 1];
+            if (i != tr->station_num - 1) {
+              tmp += tr->stopover_time[i - 1];
               if (tmp.h >= 24) {
                 tmp.h -= 24;
                 d += 1;
               }
             }
           }
-          if (i == tr.station_num - 1) {
+          if (i == tr->station_num - 1) {
             std::cout << "xx-xx xx:xx";
           } else {
             std::cout << d << ' ' << tmp;
-            tmp += tr.travel_time[i];
+            tmp += tr->travel_time[i];
             if (tmp.h >= 24) {
               tmp.h -= 24;
               d += 1;
             }
           }
-          std::cout << ' ' << tr.price[i] << ' ';
-          if (i != tr.station_num - 1) {
+          std::cout << ' ' << tr->price[i] << ' ';
+          if (i != tr->station_num - 1) {
             std::cout << tr_seat.seat[i] << '\n';
           } else {
             std::cout << 'x' << '\n';
@@ -464,8 +488,8 @@ namespace arima_kana {
         station_name from, to;
         date s_d, e_d;
         time s_t, e_t;
+        int interval;
         int price = 0;
-        int time_interval = 0;
         int vacant_seat = 0;
 
         friend std::ostream &operator<<(std::ostream &os, const query_info &q) {
@@ -474,15 +498,6 @@ namespace arima_kana {
           return os;
         }
 
-        inline int interval() const {
-          int tmp = e_d - s_d;
-          time t1 = s_t, t2 = e_t;
-          if (t2 < t1) {
-            --tmp;
-            t2.h += 24;
-          }
-          return tmp * 24 * 60 + (t2 - t1);
-        }
       };
 
       struct transfer_info {
@@ -512,101 +527,70 @@ namespace arima_kana {
                         const station_name &t,
                         const date &d,
                         bool is_time) {
-        vector<pair<train_id, time>> res_train;
-        {
-          vector<EdgeInfo> e = edge_list.find(s, true);
-          vector<EdgeInfo> f = edge_list.find(t, true);
-          if (e.size() == 0 || f.size() == 0) {
-            error("no such station included in released trains");
-          }
-          int p1 = 0, p2 = 0;
+        vector<pair<int, int>> res_train;
 
-          while (p1 < e.size() && p2 < f.size()) {
-            while (p1 < e.size() && e[p1].t_id < f[p2].t_id) {
-              ++p1;
-            }
-            if (p1 >= e.size()) break;
-            if (e[p1].t_id == f[p2].t_id) {
-              res_train.push_back(pair(e[p1].t_id, e[p1].start_time));
-              ++p1, ++p2;
-            }
-            if (p1 >= e.size() || p2 >= f.size()) break;
-            while (p2 < f.size() && f[p2].t_id < e[p1].t_id) {
-              ++p2;
-            }
-            if (p1 == e.size() || p2 >= f.size()) break;
-            if (e[p1].t_id == f[p2].t_id) {
-              res_train.push_back(pair(e[p1].t_id, e[p1].start_time));
-              ++p1, ++p2;
-            }
+        vector<EdgeInfo> e = edge_list.find(s, true);
+        vector<EdgeInfo> f = edge_list.find(t, true);
+        if (e.size() == 0 || f.size() == 0) {
+          error("no such station included in released trains");
+        }
+        int p1 = 0, p2 = 0;
+
+        while (p1 < e.size() && p2 < f.size()) {
+          while (p1 < e.size() && e[p1].t_id < f[p2].t_id) {
+            ++p1;
+          }
+          if (p1 >= e.size()) break;
+          if (e[p1].t_id == f[p2].t_id) {
+            if (e[p1].station_ind < f[p2].station_ind) res_train.push_back(pair(p1, p2));
+            ++p1, ++p2;
+          }
+          if (p1 >= e.size() || p2 >= f.size()) break;
+          while (p2 < f.size() && f[p2].t_id < e[p1].t_id) {
+            ++p2;
+          }
+          if (p1 == e.size() || p2 >= f.size()) break;
+          if (e[p1].t_id == f[p2].t_id) {
+            if (e[p1].station_ind < f[p2].station_ind) res_train.push_back(pair(p1, p2));
+            ++p1, ++p2;
           }
         }
+
 
         int i = 0;
         vector<query_info> res;
         while (i < res_train.size()) {
-          TrainInfo *tr = train_list.find(res_train[i].first);
-
-          TrainInfo &tmp = *tr;
-          date origin_start_date = d - res_train[i].second.h / 24;
-          if (origin_start_date < tmp.start_date || tmp.start_date + tmp.date_num - 1 < origin_start_date) {
+          EdgeInfo &tmpe = e[res_train[i].first];
+          EdgeInfo &tmpf = f[res_train[i].second];
+          date origin_start_date = d - tmpe.start_time.h / 24;
+          if (origin_start_date < tmpe.start_date || tmpe.start_date + tmpe.duration_date - 1 < origin_start_date) {
             i++;
             continue;
-          }// not in the sale date
-
+          }
           query_info q;
-          int start = -1, end = -1;
-          int time_interval = 0;
-          int seat_num = 0x3fffffff;
-          int date_index = origin_start_date - tmp.start_date;
-          SeatInfo &tr_seat = seat_list.get_train_date(tmp.occupied_seat_index, date_index);
-          for (int j = 0; j < tmp.station_num - 1; j++) {
-            if (tmp.stations[j] == s) {
-              start = j;
-            } else if (tmp.stations[j] == t) {
-              end = j;
-            }// match
-            if (start != -1 && end == -1) {
-              time_interval += tmp.travel_time[j] + tmp.stopover_time[j];
-              seat_num = std::min(seat_num, tr_seat.seat[j]);
-            }// mount the time, price and min seat_num
-            if (start != -1 && end != -1) {
-              break;
-            }
-          }
-          if (tmp.stations[tmp.station_num - 1] == t) {
-            end = tmp.station_num - 1;
-          }
+          int date_index = origin_start_date - tmpe.start_date;
+          int start = tmpe.station_ind, end = tmpf.station_ind;
+          int seat_num = seat_list.search_seat(tmpe.occupied_seat_index, date_index, start, end);
 
-
-          if (start == -1 || end == -1 || start >= end) {
-            i++;
-            continue;
-          } else {
-            time_interval -= tmp.stopover_time[end - 1];
-            int price = tmp.price[end] - tmp.price[start];
-            q.t_id = tmp.t_id;
-            q.from = s;
-            q.to = t;
-            q.s_d = d;
-            q.s_t = res_train[i].second;
-            q.s_t.h %= 24;
-            q.e_t = res_train[i].second + time_interval;
-            q.e_d = origin_start_date + q.e_t.h / 24;
-            q.e_t.h %= 24;
-
-            q.e_t.h %= 24;
-            q.price = price;
-            q.time_interval = time_interval;
-            q.vacant_seat = seat_num;
-            res.push_back(q);
-            ++i;
-          }
+          q.t_id = tmpe.t_id;
+          q.from = s;
+          q.to = t;
+          q.s_d = d;
+          q.s_t = tmpe.start_time;
+          q.s_t.h %= 24;
+          q.e_t = tmpf.start_time - tmpf.stop_time;
+          q.e_d = origin_start_date + q.e_t.h / 24;
+          q.e_t.h %= 24;
+          q.price = tmpf.price_till_now - tmpe.price_till_now;
+          q.interval = (tmpf.start_time - tmpe.start_time) - tmpf.stop_time;
+          q.vacant_seat = seat_num;
+          res.push_back(q);
+          ++i;
         }
         if (is_time) {
           sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
-            return a.interval() < b.interval()
-                   || (a.interval() == b.interval() && a.t_id < b.t_id);
+            return a.interval < b.interval
+                   || (a.interval == b.interval && a.t_id < b.t_id);
           });
         } else {
           sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
@@ -756,7 +740,6 @@ namespace arima_kana {
             q1.e_t = i.e_t;
             q1.e_t.h %= 24;
             q1.price = i.price;
-            q1.time_interval = i.time_interval;
             q1.vacant_seat = seat_list.search_seat(i.occupied_seat_index,
                                                    origin_date_1 - i.s_d, i.from, i.to);
             query_info &q2 = res.q2;
@@ -770,7 +753,6 @@ namespace arima_kana {
             q2.e_t = j.e_t;
             q2.e_t.h %= 24;
             q2.price = j.price;
-            q2.time_interval = j.time_interval;
             q2.vacant_seat = seat_list.search_seat(j.occupied_seat_index,
                                                    origin_date_2 - j.s_d, j.from, j.to);
             result.push_back(res);
@@ -813,48 +795,38 @@ namespace arima_kana {
                                 const station_name &to,
                                 const date &d,
                                 int num, bool queue = false) {
-        TrainInfo *t = train_list.find(t_id);
-        TrainInfo &tmp = *t;
-        if (!tmp.released) {
-          error("train not released");
+        EdgeInfo e = station_train_to_ind.find(pair(from, t_id), true);
+        EdgeInfo f = station_train_to_ind.find(pair(to, t_id), true);
+        if (e.t_id == train_id() || f.t_id == train_id()) {
+          error("no such station included in released trains");
         }
-        if (num > tmp.seat_num) {
+        if (e.t_id != f.t_id) {
+          error("no such station included in released trains");
+        }
+        if (num > e.max_posssible_seat) {
           error("seat insatisfiable");
         }
-        int date_index = d - tmp.start_date;
-        int start = -1, end = -1;
-        time cur_time = tmp.start_time;
-        for (int i = 0; i < tmp.station_num - 1; i++) {
-          if (tmp.stations[i] == from) {
-            start = i;
-            st = cur_time;
-          }
-          cur_time += tmp.travel_time[i];
-          if (tmp.stations[i + 1] == to) {
-            end = i + 1;
-            ed = cur_time;
-          }
-          if (start != -1 && end != -1) {
-            break;
-          }
-          cur_time += tmp.stopover_time[i];
-        }
 
-        date_index -= st.h / 24;
-        if (date_index < 0 || date_index >= tmp.date_num) {
-          error("invalid date");
-        }
-        date origin_date = d - st.h / 24;
-        ed.h -= st.h / 24 * 24;
-        st.h %= 24;
-        if (start == -1 || end == -1 || start >= end) {
+        int date_index = d - e.start_date;
+        int start = e.station_ind, end = f.station_ind;
+        if (start >= end) {
           error("end station not in the train route");
         }
-        int price = tmp.price[end] - tmp.price[start];
+        date_index -= e.start_time.h / 24;
+        if (date_index < 0 || date_index >= e.duration_date) {
+          error("invalid date");
+        }
+        st = e.start_time;
+        ed = f.start_time - f.stop_time;
+        ed.h -= st.h / 24 * 24;
+        st.h %= 24;
+        int price = f.price_till_now - e.price_till_now;
 
         try {
-          seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
-        } catch (const ErrorException &e) {
+          seat_list.buy_seat(e.occupied_seat_index, date_index, start, end, num);
+        } catch (
+                const ErrorException &e
+        ) {
           // seat not enough
           if (!queue) {
             return pair(-1, -1);

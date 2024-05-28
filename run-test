@@ -60,9 +60,20 @@ chmod a+x "$exe"
 
 for i in $list; do
   outfile="$(tmp)"
+  log="$HOME/Git/lib/Ticket_System_Li_Mike/log/test-$i.log"
   echo "About to run input #$i..."
-  echo "$basedir/$i.in"
-  time "$exe" < "$basedir/$i.in" > "$outfile"
+
+  # Redirect stdout and stderr to /dev/null to suppress std::cout and std::cerr output
+  /usr/bin/time -v "$exe" < "$basedir/$i.in" > "$outfile" 2> "$log"
+
+  # Display the content of timer_log.txt if it exists
+  if [ -f "timer_log.txt" ]; then
+    echo "Content of timer_log.txt:"
+    cat "timer_log.txt"
+  else
+    echo "timer_log.txt not found."
+  fi
+
   difffile="$(tmp)"
   if diff -ZB "$outfile" "$basedir/$i.out" > "$difffile"; then true; else
     cat "$difffile" | head -5

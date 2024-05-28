@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdio>
 #include <fstream>  // Add this line
+
 class Timer {
 private:
   std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
@@ -14,6 +15,7 @@ public:
   Timer(const char *s) : name(s), totduration(0) {
     logFile.open("timer_log.txt", std::ios::app);
   }
+
   void start() {
     start_time = std::chrono::system_clock::now();
   }
@@ -24,7 +26,7 @@ public:
   }
 
   double duration() {
-    return (double)totduration * std::chrono::nanoseconds::period::num / std::chrono::nanoseconds::period::den;
+    return (double) totduration * std::chrono::nanoseconds::period::num / std::chrono::nanoseconds::period::den;
   }
 
   ~Timer() {

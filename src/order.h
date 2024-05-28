@@ -70,10 +70,10 @@ namespace arima_kana {
               list(af) {}
 
       void query_order(const acc_id &c_id) {
-        vector<OrderInfo *> orders = list.find(c_id);
+        vector<OrderInfo> orders = list.find(c_id, true);
         std::cout << orders.size() << '\n';
         for (auto &order: orders) {
-          std::cout << *order << '\n';
+          std::cout << order << '\n';
         }
       }
 

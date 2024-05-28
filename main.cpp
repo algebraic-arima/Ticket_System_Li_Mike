@@ -6,6 +6,7 @@
 using std::cin;
 using std::cout;
 int arima_kana::timestamp = 0;
+using arima_kana::handle;
 
 int main() {
   std::ofstream log("log.txt", std::ios::out);
@@ -14,12 +15,11 @@ int main() {
 //  std::cin.tie(nullptr);
 //  std::cout.tie(nullptr);
   std::string str;
-  arima_kana::Parser parser;
   while (true) {
     try {
       getline(cin, str);
       if (str.empty()) continue;
-      if (!parser.handle(str))
+      if (!handle(str))
         break;
     } catch (const ErrorException &e) {
       cout << e.getMessage() << '\n';

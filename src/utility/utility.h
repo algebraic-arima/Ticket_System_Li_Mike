@@ -167,7 +167,7 @@ namespace arima_kana {
       explicit vector(const T &val, size_t cap = 32) : _size(cap), _capacity(cap) {
         data = alloc.allocate(_capacity);
         for (size_t i = 0; i < _size; i++) {
-          alloc.construct(data + i, val);
+          alloc.construct(data + i, std::move(val));
         }
       }
 
@@ -175,7 +175,7 @@ namespace arima_kana {
         if (_size == _capacity) {
           double_space();
         }
-        alloc.construct(data + _size, val);
+        alloc.construct(data + _size, std::move(val));
         _size++;
       }
 
