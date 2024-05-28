@@ -14,8 +14,8 @@ namespace arima_kana {
     public:
       std::string data_name;
       std::fstream data_filer;
-      int num = 0;
-      unique_BlockRiver<K, int, block, bp_max, bp_min, buf_max> index_list;
+      size_t num = 0;
+      unique_BlockRiver<K, size_t, block, bp_max, bp_min, buf_max> index_list;
       List_Map_Buffer<V, size_t, 1, buf_max> list;
 
       explicit unique_ind_ext_BPtree(const std::string &df) :
@@ -49,7 +49,8 @@ namespace arima_kana {
 
       void insert(const K &key, const V &val) {
         index_list.insert(key, ++num);
-        data_filer.open(data_name, std::ios::app | std::ios::binary);
+        data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
+        data_filer.seekp((num - 1) * sizeof(V) + sizeof(size_t));
         data_filer.write(reinterpret_cast<const char *>(&val), sizeof(V));
         data_filer.close();
       }

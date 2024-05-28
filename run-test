@@ -58,11 +58,12 @@ basedir="$cwd/testcases/$1"
 cd "$testdir"
 chmod a+x "$exe"
 
+
 for i in $list; do
   outfile="$(tmp)"
   log="$HOME/Git/lib/Ticket_System_Li_Mike/log/test-$i.log"
   echo "About to run input #$i..."
-
+  touch timer_log.txt
   # Redirect stdout and stderr to /dev/null to suppress std::cout and std::cerr output
   /usr/bin/time -v "$exe" < "$basedir/$i.in" > "$outfile" 2> "$log"
 

@@ -41,8 +41,7 @@ namespace arima_kana {
 
     class Account {
     public:
-      unique_BlockRiver<acc_id, AccountInfo, 32, 200, 90, 100> list;
-      // (22+108)*32*100=400kb
+      unique_BlockRiver<acc_id, AccountInfo, 32, 200, 90, 60> list;
       map<acc_id, short> login_list;
 
       explicit Account(const std::string &af = "1account") :
