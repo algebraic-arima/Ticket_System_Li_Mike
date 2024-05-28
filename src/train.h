@@ -254,8 +254,8 @@ namespace arima_kana {
     class Train {
     public:
       unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 1> train_list;
-      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 400> edge_list;
-      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 60> station_train_to_ind;
+      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 100> edge_list;
+      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 20> station_train_to_ind;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
@@ -558,17 +558,17 @@ namespace arima_kana {
 
 
         int i = 0;
+        query_info q;
         vector<query_info> res;
         while (i < res_train.size()) {
           EdgeInfo &tmpe = e[res_train[i].first];
           EdgeInfo &tmpf = f[res_train[i].second];
           date origin_start_date = d - tmpe.start_time.h / 24;
-          if (origin_start_date < tmpe.start_date || tmpe.start_date + tmpe.duration_date - 1 < origin_start_date) {
+          int date_index = origin_start_date - tmpe.start_date;
+          if (origin_start_date < tmpe.start_date || tmpe.duration_date - 1 < date_index) {
             i++;
             continue;
           }
-          query_info q;
-          int date_index = origin_start_date - tmpe.start_date;
           int start = tmpe.station_ind, end = tmpf.station_ind;
           int seat_num = seat_list.search_seat(tmpe.occupied_seat_index, date_index, start, end);
 
@@ -850,41 +850,16 @@ namespace arima_kana {
                           const station_name &to,
                           const date &d,
                           int num) {
-        TrainInfo *t = train_list.find(t_id);
-        time st, ed;
-        TrainInfo &tmp = *t;
-        if (!tmp.released) {
-          return false;
-        }
-        int date_index = d - tmp.start_date;
-        int start = -1, end = -1;
-        time cur_time = tmp.start_time;
-        for (int i = 0; i < tmp.station_num - 1; i++) {
-          if (tmp.stations[i] == from) {
-            start = i;
-            st = cur_time;
-          }
-          cur_time += tmp.travel_time[i];
-          if (tmp.stations[i] == to) {
-            end = i;
-            ed = cur_time;
-          }
-          cur_time += tmp.stopover_time[i];
-          if (start != -1 && end != -1) {
-            break;
-          }
-        }
-        if (tmp.stations[tmp.station_num - 1] == to) {
-          end = tmp.station_num - 1;
-          ed = cur_time;
-        }
-        date_index -= st.h / 24;
-        date origin_date = d - st.h / 24;
-        if (start == -1 || end == -1 || start >= end) {
+        EdgeInfo e = station_train_to_ind.find(pair(from, t_id), true);
+        EdgeInfo f = station_train_to_ind.find(pair(to, t_id), true);
+        int date_index = d - e.start_date;
+        int start = e.station_ind, end = f.station_ind;
+        date_index -= e.start_time.h / 24;
+        if (start >= end) {
           error("end station not in the train route");
         }
         try {
-          seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
+          seat_list.buy_seat(e.occupied_seat_index, date_index, start, end, num);
         } catch (const ErrorException &e) {
           return false;
         }
@@ -902,34 +877,15 @@ namespace arima_kana {
                          const station_name &to,
                          const date &d,
                          int num) {
-        TrainInfo *t = train_list.find(t_id);
-        TrainInfo &tmp = *t;
-        int date_index = d - tmp.start_date;
-        int start = -1, end = -1;
-        time cur_time = tmp.start_time;
-        time st;
-        for (int i = 0; i < tmp.station_num - 1; i++) {
-          if (tmp.stations[i] == from) {
-            start = i;
-            st = cur_time;
-          } else if (tmp.stations[i] == to) {
-            end = i;
-          }
-          cur_time += tmp.travel_time[i];
-          if (start != -1 && end != -1) {
-            break;
-          }
-          cur_time += tmp.stopover_time[i];
-        }
-        if (tmp.stations[tmp.station_num - 1] == to) {
-          end = tmp.station_num - 1;
-        }
-        if (start == -1 || end == -1 || start >= end) {
+        EdgeInfo e = station_train_to_ind.find(pair(from, t_id), true);
+        EdgeInfo f = station_train_to_ind.find(pair(to, t_id), true);
+        int date_index = d - e.start_date;
+        int start = e.station_ind, end = f.station_ind;
+        if (start >= end) {
           error("invalid_station");
         }
-        date_index -= st.h / 24;// refund on the origin date
-        date origin_date = d - st.h / 24;
-        seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
+        date_index -= e.start_time.h / 24;// refund on the origin date
+        seat_list.refund_seat(e.occupied_seat_index, date_index, start, end, num);
 //        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
 //          std::ofstream log("log.txt", std::ios::app);
 //          log << timestamp << ": refund\n";

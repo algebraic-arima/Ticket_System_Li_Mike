@@ -41,8 +41,8 @@ namespace arima_kana {
 
     class Account {
     public:
-      unique_BlockRiver<acc_id, AccountInfo, 32, 200, 90, 60> list;
-      std::map<acc_id, short> login_list;
+      unique_BlockRiver<acc_id, AccountInfo, 32, 200, 90, 16> list;
+      map<acc_id, short> login_list;
 
       explicit Account(const std::string &af = "1account") :
               list(af) {}
@@ -76,7 +76,7 @@ namespace arima_kana {
           return false;
         if (tmp->pw != pw)
           return false;
-        login_list.insert(std::make_pair(id, tmp->priv));
+        login_list.insert(pair(id, tmp->priv));
         return true;
       }
 

@@ -18,7 +18,7 @@ namespace arima_kana {
        * it should have a default constructor, a copy constructor.
        * You can use arima_kana::map as value_type by typedef.
        */
-      typedef arima_kana::pair<Key, T> value_type;
+      typedef pair<Key, T> value_type;
       typedef Key key_type;
       typedef T mapped_type;
       // RE if const Key
