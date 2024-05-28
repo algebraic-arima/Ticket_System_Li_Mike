@@ -190,7 +190,7 @@ namespace arima_kana {
       Node *head;
       Node *tail;
       size_t _size;
-      std::unordered_map<size_t, Node *> m;
+      map<size_t, Node *> m;
 
     public:
 
