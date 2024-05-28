@@ -254,7 +254,7 @@ namespace arima_kana {
     class Train {
     public:
       unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 1> train_list;
-      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 1000> edge_list;
+      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 400> edge_list;
       unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 60> station_train_to_ind;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
@@ -824,9 +824,7 @@ namespace arima_kana {
 
         try {
           seat_list.buy_seat(e.occupied_seat_index, date_index, start, end, num);
-        } catch (
-                const ErrorException &e
-        ) {
+        } catch (const ErrorException &e) {
           // seat not enough
           if (!queue) {
             return pair(-1, -1);
