@@ -8,6 +8,7 @@
 #include "BlockRiver.h"
 #include "unique_BlockRiver.h"
 #include "seat.h"
+#include "unique_ind_ext_BPtree/unique_ind_ext_BPtree.h"
 
 
 namespace arima_kana {
@@ -191,7 +192,7 @@ namespace arima_kana {
     public:
       train_id t_id;
       short station_num = 0;
-      station_name stations[20];
+      station_name stations[64];
       int seat_num = 0;
       int occupied_seat_index = -1;
       // on the i-th day, from the j-th to the j+1-th station
@@ -253,14 +254,14 @@ namespace arima_kana {
 
     class Train {
     public:
-      unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 1> train_list;
-      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 100> edge_list;
-      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 20> station_train_to_ind;
+      unique_ind_ext_BPtree<train_id, TrainInfo, 16, 128, 48, 1> train_list;
+      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 32> edge_list;
+      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 32> station_train_to_ind;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
       // insert into edge_list when release
 
-      Train() : train_list("2train"), edge_list("3edge"),
+      Train() : train_list("2trainind"), edge_list("3edge"),
                 station_train_to_ind("7statrtoi") {}
 
       void add_train(const std::string &param) {
@@ -350,42 +351,42 @@ namespace arima_kana {
       }
 
       void release_train(const train_id &t_id) {
-        TrainInfo *t = train_list.find(t_id);
-        TrainInfo &tmp = *t;
-        if (tmp.released) {
+        TrainInfo *tmp = train_list.find(t_id);
+        if (tmp->released) {
           error("train has been released");
         }
-        tmp.released = true;
-        time cur_time = tmp.start_time;
+        tmp->released = true;
+        train_list.update();
+        time cur_time = tmp->start_time;
         EdgeInfo edge;
-        edge.start_date = tmp.start_date;
-        edge.duration_date = tmp.date_num;
-        edge.max_posssible_seat = tmp.seat_num;
-        edge.occupied_seat_index = tmp.occupied_seat_index;
+        edge.start_date = tmp->start_date;
+        edge.duration_date = tmp->date_num;
+        edge.max_posssible_seat = tmp->seat_num;
+        edge.occupied_seat_index = tmp->occupied_seat_index;
         int i;
-        for (i = 0; i < tmp.station_num - 1; i++) {
-          edge.from = tmp.stations[i];
+        for (i = 0; i < tmp->station_num - 1; i++) {
+          edge.from = tmp->stations[i];
           edge.station_ind = i;
           if (i != 0) {
-            edge.stop_time = tmp.stopover_time[i - 1];
+            edge.stop_time = tmp->stopover_time[i - 1];
           } else {
             edge.stop_time = 0;
           }
           edge.start_time = cur_time;
           edge.t_id = t_id;
-          edge.price_till_now = tmp.price[i];
+          edge.price_till_now = tmp->price[i];
           edge_list.insert(edge.from, edge);
-          cur_time += tmp.travel_time[i] + tmp.stopover_time[i];
-          station_train_to_ind.insert(pair(tmp.stations[i], t_id), edge);
+          cur_time += tmp->travel_time[i] + tmp->stopover_time[i];
+          station_train_to_ind.insert(pair(tmp->stations[i], t_id), edge);
         }
-        edge.from = tmp.stations[i];
+        edge.from = tmp->stations[i];
         edge.start_time = cur_time;
         edge.station_ind = i;
         edge.stop_time = 0;
-        edge.price_till_now = tmp.price[i];
+        edge.price_till_now = tmp->price[i];
         edge.t_id = t_id;
         edge_list.insert(edge.from, edge);
-        station_train_to_ind.insert(pair(tmp.stations[i], t_id), edge);
+        station_train_to_ind.insert(pair(tmp->stations[i], t_id), edge);
       }
 
       void delete_train(const train_id &t_id) {
@@ -558,7 +559,7 @@ namespace arima_kana {
 
 
         int i = 0;
-        query_info q;
+
         vector<query_info> res;
         while (i < res_train.size()) {
           EdgeInfo &tmpe = e[res_train[i].first];
@@ -571,7 +572,7 @@ namespace arima_kana {
           }
           int start = tmpe.station_ind, end = tmpf.station_ind;
           int seat_num = seat_list.search_seat(tmpe.occupied_seat_index, date_index, start, end);
-
+          query_info q;
           q.t_id = tmpe.t_id;
           q.from = s;
           q.to = t;
@@ -628,10 +629,15 @@ namespace arima_kana {
         vector<transfer_info> result;
         vector<candidate> pos_1;
 
+        train_id t1 = e[0].t_id;
+        TrainInfo *tm1 = train_list.find(t1);
+        TrainInfo &tmp1 = *tm1;
         for (auto &i: e) {
-          train_id t1 = i.t_id;
-          TrainInfo *tr1 = train_list.find(t1);
-          TrainInfo &tmp1 = *tr1;
+          if (i.t_id != t1) {
+            t1 = i.t_id;
+            tm1 = train_list.find(t1);
+            tmp1 = *tm1;
+          }
           date origin_start_date = d - i.start_time.h / 24;
           if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num - 1 < origin_start_date) {
             continue;
@@ -666,10 +672,15 @@ namespace arima_kana {
         }
 
         vector<candidate> pos_2;
+        train_id t2 = f[0].t_id;
+        TrainInfo *tm2 = train_list.find(t2);
+        TrainInfo &tmp2 = *tm2;
         for (auto &j: f) {
-          train_id t2 = j.t_id;
-          TrainInfo *tr2 = train_list.find(t2);
-          TrainInfo &tmp2 = *tr2;
+          if (j.t_id != t2) {
+            t2 = j.t_id;
+            tm2 = train_list.find(t2);
+            tmp2 = *tm2;
+          }
           int st2 = -1;
           candidate tmp;
           for (int k = tmp2.station_num - 1; k >= 0; --k) {

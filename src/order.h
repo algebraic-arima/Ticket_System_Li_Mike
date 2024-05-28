@@ -64,7 +64,7 @@ namespace arima_kana {
 
     class Order {
     public:
-      BlockRiver<acc_id, OrderInfo, 16, 16, 6, 60> list;
+      BlockRiver<acc_id, OrderInfo, 16, 16, 6, 64> list;
 
       explicit Order(const std::string &af = "4order") :
               list(af) {}
