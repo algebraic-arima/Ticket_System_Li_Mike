@@ -27,8 +27,10 @@ namespace arima_kana {
 //          free_pos.pop_back();
 //          return pos;
 //        }
-        list.push_back(Node());
-        return ++size;
+        Node tmp;
+        append_main(tmp);
+        list[++size] = tmp;
+        return size;
       }
 
       /// @divide_node
@@ -303,10 +305,11 @@ namespace arima_kana {
       size_t free_num = 0;
       std::fstream index_filer;
       std::string index_file;
-      vector<Node> list;
-//      arima_kana::vector<size_t> free_pos;
+      List_Map_Buffer<Node, size_t, 3, 1000> list;
 
-      explicit unique_BPTree(const std::string &ifn) : index_file(ifn + "_index") {
+      explicit unique_BPTree(const std::string &ifn) :
+              index_file(ifn + "_index"),
+              list(ifn + "_index") {
         index_filer.open(index_file, std::ios::in);
         if (!index_filer.is_open()) {
           index_filer.close();
@@ -323,7 +326,6 @@ namespace arima_kana {
         index_filer.write(reinterpret_cast<char *>(&size), SIZE_T);
         index_filer.write(reinterpret_cast<char *>(&root), SIZE_T);
         index_filer.write(reinterpret_cast<char *>(&free_num), SIZE_T);
-        list.push_back(Node());
         index_filer.close();
       }
 
@@ -332,12 +334,12 @@ namespace arima_kana {
         index_filer.read(reinterpret_cast<char *>(&size), SIZE_T);
         index_filer.read(reinterpret_cast<char *>(&root), SIZE_T);
         index_filer.read(reinterpret_cast<char *>(&free_num), SIZE_T);
-        Node tmp;
-        list.push_back(tmp);
-        for (int i = 0; i < size; i++) {
-          index_filer.read(reinterpret_cast<char *>(&tmp), SIZE_NODE);
-          list.push_back(tmp);
-        }
+//        Node tmp;
+//        list.push_back(tmp);
+//        for (int i = 0; i < size; i++) {
+//          index_filer.read(reinterpret_cast<char *>(&tmp), SIZE_NODE);
+//          list.push_back(tmp);
+//        }
 //        size_t tm;
 //        for (int i = 0; i < free_num; i++) {
 //          index_filer.read(reinterpret_cast<char *>(&tm), SIZE_T);
@@ -352,12 +354,18 @@ namespace arima_kana {
         index_filer.write(reinterpret_cast<char *>(&size), SIZE_T);
         index_filer.write(reinterpret_cast<char *>(&root), SIZE_T);
         index_filer.write(reinterpret_cast<char *>(&free_num), SIZE_T);
-        for (int i = 1; i < list.size(); i++) {
-          index_filer.write(reinterpret_cast<char *>(&list[i]), SIZE_NODE);
-        }
+//        for (int i = 1; i < list.size(); i++) {
+//          index_filer.write(reinterpret_cast<char *>(&list[i]), SIZE_NODE);
+//        }
 //        for (int i = 0; i < free_num; i++) {
 //          index_filer.write(reinterpret_cast<char *>(&free_pos[i]), SIZE_T);
 //        }
+        index_filer.close();
+      }
+
+      void append_main(Node &t) {
+        index_filer.open(index_file, std::ios::app | std::ios::binary);
+        index_filer.write(reinterpret_cast<char *>(&t), SIZE_NODE);
         index_filer.close();
       }
 
@@ -370,7 +378,8 @@ namespace arima_kana {
           tmp.is_leaf = true;
           root = 1;
           size = 1;
-          list.push_back(tmp);
+          append_main(tmp);
+          list[1] = tmp;
           return;
         }
         auto kv = k;
