@@ -32,7 +32,6 @@ namespace arima_kana {
 
       virtual void clear() = 0;
 
-
       std::fstream file;
       std::string name;
     public:

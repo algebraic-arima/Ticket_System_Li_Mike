@@ -8,6 +8,7 @@
 #include "BlockRiver.h"
 #include "unique_BlockRiver.h"
 #include "seat.h"
+#include "unique_ind_ext_BPtree.h"
 
 
 namespace arima_kana {
@@ -234,7 +235,7 @@ namespace arima_kana {
       int duration_date = 0;
       int price_till_now = 0;
       int occupied_seat_index = 0;
-      int max_posssible_seat = 0;
+      int max_possible_seat = 0;
       train_id t_id;
 
       EdgeInfo() = default;
@@ -254,7 +255,7 @@ namespace arima_kana {
     class Train {
     public:
       // block_num, bp_max, bp_min, block_buffer_size
-      unique_BlockRiver<train_id, TrainInfo, 8, 186, 92, 1, 10> train_list;
+      unique_ind_ext_BPtree<train_id, TrainInfo, 136, 186, 92, 60, 60> train_list;
       BlockRiver<station_name, EdgeInfo, 26, 26, 12, 100, 100> edge_list;
       //tree: (44+108)*26*100=400kb
       //data: (44+108)*26*100=400kb
@@ -366,7 +367,7 @@ namespace arima_kana {
         EdgeInfo edge;
         edge.start_date = tmp.start_date;
         edge.duration_date = tmp.date_num;
-        edge.max_posssible_seat = tmp.seat_num;
+        edge.max_possible_seat = tmp.seat_num;
         edge.occupied_seat_index = tmp.occupied_seat_index;
         int i;
         for (i = 0; i < tmp.station_num - 1; i++) {
@@ -448,53 +449,12 @@ namespace arima_kana {
         }
       }
 
-      void log_train(std::ofstream &os, const TrainInfo &tr, date d) {
-        if (d < tr.start_date || tr.start_date + tr.date_num - 1 < d) {
-          error("train not available on this date");
-        }
-        os << tr.t_id << ' ' << tr.type << '\n';
-        int date_index = d - tr.start_date;
-        time tmp = tr.start_time;
-        SeatInfo &tr_seat = seat_list.get_train_date(tr.occupied_seat_index, date_index);
-        for (int i = 0; i < tr.station_num; i++) {
-          os << tr.stations[i] << ' ';
-          if (i == 0) {
-            os << "xx-xx xx:xx -> ";
-          } else {
-            os << d << ' ' << tmp << " -> ";
-            if (i != tr.station_num - 1) {
-              tmp += tr.stopover_time[i - 1];
-              if (tmp.h >= 24) {
-                tmp.h -= 24;
-                d += 1;
-              }
-            }
-          }
-          if (i == tr.station_num - 1) {
-            os << "xx-xx xx:xx";
-          } else {
-            os << d << ' ' << tmp;
-            tmp += tr.travel_time[i];
-            if (tmp.h >= 24) {
-              tmp.h -= 24;
-              d += 1;
-            }
-          }
-          os << ' ' << tr.price[i] << ' ';
-          if (i != tr.station_num - 1) {
-            os << tr_seat.seat[i] << '\n';
-          } else {
-            os << 'x' << '\n';
-          }
-        }
-      }
-
       struct query_info {
         train_id t_id;
         station_name from, to;
         date s_d, e_d;
         time s_t, e_t;
-        int interval;
+        int interval = 0;
         int price = 0;
         int vacant_seat = 0;
 
@@ -618,7 +578,7 @@ namespace arima_kana {
         time s_t, e_t;
         int price = 0;
         int time_interval = 0;
-        int occupied_seat_index;
+        int occupied_seat_index = 0;
       };
 
       void query_transfer(const station_name &s,
@@ -809,7 +769,7 @@ namespace arima_kana {
         if (e.t_id != f.t_id) {
           error("no such station included in released trains");
         }
-        if (num > e.max_posssible_seat) {
+        if (num > e.max_possible_seat) {
           error("seat insatisfiable");
         }
 
@@ -857,7 +817,7 @@ namespace arima_kana {
                           const date &d,
                           int num) {
         TrainInfo *t = train_list.find(t_id);
-        time st, ed;
+        time st;
         TrainInfo &tmp = *t;
         if (!tmp.released) {
           return false;
@@ -873,7 +833,6 @@ namespace arima_kana {
           cur_time += tmp.travel_time[i];
           if (tmp.stations[i] == to) {
             end = i;
-            ed = cur_time;
           }
           cur_time += tmp.stopover_time[i];
           if (start != -1 && end != -1) {
@@ -882,10 +841,8 @@ namespace arima_kana {
         }
         if (tmp.stations[tmp.station_num - 1] == to) {
           end = tmp.station_num - 1;
-          ed = cur_time;
         }
         date_index -= st.h / 24;
-        date origin_date = d - st.h / 24;
         if (start == -1 || end == -1 || start >= end) {
           error("end station not in the train route");
         }
@@ -934,7 +891,6 @@ namespace arima_kana {
           error("invalid_station");
         }
         date_index -= st.h / 24;// refund on the origin date
-        date origin_date = d - st.h / 24;
         seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
 //        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
 //          std::ofstream log("log.txt", std::ios::app);

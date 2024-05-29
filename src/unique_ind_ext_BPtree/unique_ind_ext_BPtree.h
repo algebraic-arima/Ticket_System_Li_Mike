@@ -8,21 +8,23 @@
 namespace arima_kana {
 
 
-    template<class K, class V, size_t block, size_t bp_max, size_t bp_min, size_t buf_max>
-
+    template<class K, class V, size_t block, size_t bp_max, size_t bp_min, size_t buf_max, size_t bpt_buf_max>
     class unique_ind_ext_BPtree {
     public:
       std::string data_name;
       std::fstream data_filer;
       size_t num = 0;
-      unique_BlockRiver<K, size_t, block, bp_max, bp_min, buf_max> index_list;
+      unique_BlockRiver<K, size_t, block, bp_max, bp_min, buf_max, bpt_buf_max> index_list;
+      // V=trainInfo with 4096 bytes, K=train_id with 22 bytes
+      // tree: 22*186*100=400kb
+      // data: (22+8)*136*100=400kb
       List_Map_Buffer<V, size_t, 1, buf_max> list;
+      // 4000*100=400kb
 
       explicit unique_ind_ext_BPtree(const std::string &df) :
               data_name(df + "_data"),
               index_list(df),
-              list(df) {
-
+              list(df + "_data") {
         data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
         if (!data_filer.is_open()) {
           data_filer.close();
@@ -33,9 +35,7 @@ namespace arima_kana {
         }
       }
 
-      inline
-
-      void init_data() {
+      inline void init_data() {
         data_filer.open(data_name, std::ios::out | std::ios::binary);
         data_filer.write(reinterpret_cast<char *>(&num), sizeof(size_t));
         data_filer.close();
