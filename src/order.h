@@ -71,7 +71,8 @@ namespace arima_kana {
               list(af) {}
 
       void query_order(const acc_id &c_id) {
-        vector<OrderInfo> orders = list.find(c_id, true);
+        vector<OrderInfo> orders;
+        list.find(c_id, true, orders);
         std::cout << orders.size() << '\n';
         for (auto &order: orders) {
           std::cout << order << '\n';

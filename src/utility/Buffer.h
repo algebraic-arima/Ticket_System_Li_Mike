@@ -40,7 +40,7 @@ namespace arima_kana {
     };
 
 
-    template<class T, class pre, size_t num, size_t _cap>
+    /*template<class T, class pre, size_t num, size_t _cap>
     class List_Buffer : public Buffer<T, pre, num> {
 
       struct Node {
@@ -173,44 +173,7 @@ namespace arima_kana {
         }
       }
 
-    };
-
-    template<class T, class pre, size_t num, size_t _cap>
-    class Table_Ptr_Buffer : public Buffer<T, pre, num> {
-      vector<T *> table;
-    public:
-      explicit Table_Ptr_Buffer(const std::string &fn) : table(), Buffer<T, pre, num>(fn) {}
-
-      ~Table_Ptr_Buffer() {
-        for (size_t i = 0; i < table.size(); ++i) {
-          this->write_node(*table[i], i);
-          delete table[i];
-        }
-      }
-
-      void clear() {
-        table.clear();
-      }
-
-      T &operator[](size_t pos) {
-        if (pos >= table.size()) {
-          table.resize(pos + 1, nullptr);
-        }
-        if (table[pos] == nullptr) {
-          table[pos] = new T();
-          this->read_node(*table[pos], pos);
-        }
-        return table[pos];
-      }
-
-      void push_back(const T &val) {
-        table.push_back(new T(val));
-      }
-
-      void resize(size_t size) {
-        table.resize(size, nullptr);
-      }
-    };
+    };*/
 
     template<class T, class pre, size_t num, size_t _cap>
     class List_Map_Buffer : public Buffer<T, pre, num> {

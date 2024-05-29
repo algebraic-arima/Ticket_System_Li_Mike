@@ -165,8 +165,7 @@ namespace arima_kana {
         return res;
       }
 
-      vector<V> find(const K &k, bool flag) {
-        vector<V> res;
+      vector<V> &find(const K &k, bool flag,vector<V> &res) {
         vector<size_t> tmp = list.find(k);
         for (int i = 0; i < tmp.size(); i++) {
           DNode &t = data_list[tmp[i]];

@@ -261,10 +261,11 @@ namespace arima_kana {
         std::cout << -1 << '\n';
       }
       if (is_success) {
-        vector<PendingInfo> pending = pend.get_pending(it->tr_id, it->d);
+        vector<PendingInfo> pending;
+        pend.get_pending(it->tr_id, it->d, pending);
         for (auto &p: pending) {
           if (tr.is_satisfiable(p.tr_id, p.from, p.to, p.d, p.ticket_num)) {
-            pend.remove_pending(p);// p, a pointer, cannot be used after this line
+            pend.remove_pending(p);
             ord.alt_ticket(p.buyer_id, p.order_time);
           }
         }

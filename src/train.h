@@ -499,8 +499,10 @@ namespace arima_kana {
                         bool is_time) {
         vector<pair<int, int>> res_train;
 
-        vector<EdgeInfo> e = edge_list.find(s, true);
-        vector<EdgeInfo> f = edge_list.find(t, true);
+        vector<EdgeInfo> e;
+        edge_list.find(s, true, e);
+        vector<EdgeInfo> f;
+        edge_list.find(t, true, f);
         if (e.size() == 0 || f.size() == 0) {
           std::cout << "0\n";
           return;
@@ -532,13 +534,13 @@ namespace arima_kana {
         vector<query_info> res;
         while (i < res_train.size()) {
           EdgeInfo &tmpe = e[res_train[i].first];
-          EdgeInfo &tmpf = f[res_train[i].second];
           date origin_start_date = d - tmpe.start_time.h / 24;
           if (origin_start_date < tmpe.start_date || tmpe.start_date + tmpe.duration_date - 1 < origin_start_date) {
             i++;
             continue;
           }
           query_info q;
+          EdgeInfo &tmpf = f[res_train[i].second];
           int date_index = origin_start_date - tmpe.start_date;
           int start = tmpe.station_ind, end = tmpf.station_ind;
           int seat_num = seat_list.search_seat(tmpe.occupied_seat_index, date_index, start, end);
@@ -590,8 +592,10 @@ namespace arima_kana {
                           const station_name &t,
                           const date &d,
                           bool is_time) {
-        vector<EdgeInfo> e = edge_list.find(s, true);
-        vector<EdgeInfo> f = edge_list.find(t, true);
+        vector<EdgeInfo> e;
+        edge_list.find(s, true, e);
+        vector<EdgeInfo> f;
+        edge_list.find(t, true, f);
         if (e.size() == 0 || f.size() == 0) {
           std::cout << "0\n";
           return;
@@ -601,7 +605,7 @@ namespace arima_kana {
         vector<candidate> pos_1;
 
         for (auto &i: e) {
-          train_id t1 = i.t_id;
+          train_id &t1 = i.t_id;
           TrainInfo *tr1 = train_list.find(t1);
           TrainInfo &tmp1 = *tr1;
           date origin_start_date = d - i.start_time.h / 24;
@@ -639,7 +643,7 @@ namespace arima_kana {
 
         vector<candidate> pos_2;
         for (auto &j: f) {
-          train_id t2 = j.t_id;
+          train_id &t2 = j.t_id;
           TrainInfo *tr2 = train_list.find(t2);
           TrainInfo &tmp2 = *tr2;
           int st2 = -1;
