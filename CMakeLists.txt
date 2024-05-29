@@ -10,6 +10,7 @@ include_directories(src)
 include_directories(src/BPtree)
 include_directories(src/unique_BPtree)
 include_directories(src/utility)
+include_directories(src/unique_ind_ext_BPtree)
 
 add_executable(code
         src/BPtree/BNode.h
@@ -32,4 +33,5 @@ add_executable(code
         src/order.h
         src/pending.h
         src/utility/timer.h
+        src/unique_ind_ext_BPtree/unique_ind_ext_BPtree.h
 )
