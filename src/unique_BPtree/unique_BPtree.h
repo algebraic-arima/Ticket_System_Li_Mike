@@ -14,7 +14,7 @@
 #include "Buffer.h"
 
 namespace arima_kana {
-    template<class K, size_t degree, size_t min_size>
+    template<class K, size_t degree, size_t min_size, size_t buf>
     class unique_BPTree {
       typedef unique_BNode<K, degree> Node;
 
@@ -305,7 +305,7 @@ namespace arima_kana {
       size_t free_num = 0;
       std::fstream index_filer;
       std::string index_file;
-      List_Map_Buffer<Node, size_t, 3, 1000> list;
+      List_Map_Buffer<Node, size_t, 3, buf> list;
 
       explicit unique_BPTree(const std::string &ifn) :
               index_file(ifn + "_index"),

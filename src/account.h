@@ -41,7 +41,9 @@ namespace arima_kana {
 
     class Account {
     public:
-      unique_BlockRiver<acc_id, AccountInfo, 32, 200, 90, 60> list;
+      unique_BlockRiver<acc_id, AccountInfo, 32, 180, 88, 100, 100> list;
+      //tree: 22*180*100=400kb
+      //data: (22+104)*32*100=400kb
       map<acc_id, short> login_list;
 
       explicit Account(const std::string &af = "1account") :
@@ -71,7 +73,7 @@ namespace arima_kana {
           return false;//not found or duplicated
         if (login_list.find(id) != login_list.end())
           return false;
-        AccountInfo * tmp = list.find(id);
+        AccountInfo *tmp = list.find(id);
         if (!tmp)
           return false;
         if (tmp->pw != pw)
@@ -93,7 +95,7 @@ namespace arima_kana {
         if (it == login_list.end()) {
           error("get_usr: cur user not logged in");
         }
-        AccountInfo * pos = list.find(id);
+        AccountInfo *pos = list.find(id);
         if (!pos) {
           error("User not found or duplicated");
         }

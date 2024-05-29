@@ -14,13 +14,13 @@
 #include "Buffer.h"
 
 namespace arima_kana {
-    template<class K, class V, size_t block, size_t bp_max, size_t bp_min, size_t buf_max>
+    template<class K, class V, size_t block, size_t bp_max, size_t bp_min, size_t buf_max, size_t bpt_buf_max>
     class unique_BlockRiver {
     public:
 
       typedef pair<K, V> KV;
       typedef unique_DataNode<K, V, block> DNode;
-      typedef unique_BPTree<K, bp_max, bp_min> map;
+      typedef unique_BPTree<K, bp_max, bp_min, bpt_buf_max> map;
       typedef List_Map_Buffer<DNode, size_t, 1, buf_max> buffer;
 
       static constexpr int SIZE_DNODE = sizeof(DNode);

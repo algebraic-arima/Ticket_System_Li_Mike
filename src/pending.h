@@ -43,7 +43,7 @@ namespace arima_kana {
     };
 
     class PendingList {
-      BlockRiver<train_id, PendingInfo, 16, 16, 5, 128> pend_list;
+      BlockRiver<train_id, PendingInfo, 20, 20, 8, 100, 100> pend_list;
 
     public:
       PendingList() : pend_list("6pending") {}
@@ -60,8 +60,8 @@ namespace arima_kana {
         pend_list.insert(tr_id, order);
       }
 
-      vector<PendingInfo > get_pending(const train_id &tr_id, const date &d) {
-        vector<PendingInfo> res = pend_list.find(tr_id,true);
+      vector<PendingInfo> get_pending(const train_id &tr_id, const date &d) {
+        vector<PendingInfo> res = pend_list.find(tr_id, true);
         vector<PendingInfo> res1;
         for (auto &i: res) {
           if (i.d < d + 4 && d - 4 < i.d) {
