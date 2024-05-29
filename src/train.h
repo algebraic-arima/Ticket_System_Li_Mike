@@ -254,7 +254,8 @@ namespace arima_kana {
     class Train {
     public:
       unique_BlockRiver<train_id, TrainInfo, 16, 128, 48, 1> train_list;
-      BlockRiver<station_name, EdgeInfo, 22, 22, 10, 400> edge_list;
+      BlockRiver<station_name, EdgeInfo, 26, 26, 12, 100> edge_list;
+      // (40+108)*22*400
       unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 56, 20, 8, 60> station_train_to_ind;
       Seat seat_list;
       // insert into train_list and seat_list to initialize
