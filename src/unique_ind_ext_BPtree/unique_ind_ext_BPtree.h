@@ -14,7 +14,7 @@ namespace arima_kana {
       std::string data_name;
       std::fstream data_filer;
       size_t num = 0;
-      unique_BlockRiver<K, size_t, block, bp_max, bp_min, buf_max, bpt_buf_max> index_list;
+      unique_BlockRiver<K, pair<size_t, bool>, block, bp_max, bp_min, buf_max, bpt_buf_max> index_list;
       // V=trainInfo with 4096 bytes, K=train_id with 22 bytes
       // tree: 22*186*100=400kb
       // data: (22+8)*136*100=400kb
@@ -48,7 +48,7 @@ namespace arima_kana {
       }
 
       void insert(const K &key, const V &val) {
-        index_list.insert(key, ++num);
+        index_list.insert(key, pair(++num, false));
         data_filer.open(data_name, std::ios::in | std::ios::out | std::ios::binary);
         data_filer.seekp((num - 1) * sizeof(V) + sizeof(size_t));
         data_filer.write(reinterpret_cast<const char *>(&val), sizeof(V));
@@ -60,11 +60,28 @@ namespace arima_kana {
       }
 
       V *find(const K &key) {
-        size_t pos = index_list.find(key, true);
+        size_t pos = index_list.find(key, true).first;
         if (pos == 0) {
           return nullptr;
         }
         return &list[pos];
+      }
+
+      bool release(const K &key) {
+        pair<size_t, bool> *it = index_list.find(key);
+        if (it->first == 0 || it->second) {
+          return false;
+        }
+        it->second = true;
+        return true;
+      }
+
+      bool is_released(const K &key) {
+        pair<size_t, bool> *it = index_list.find(key);
+        if (it->first == 0) {
+          return false;
+        }
+        return it->second;
       }
 
       ~unique_ind_ext_BPtree() {

@@ -109,11 +109,11 @@ namespace arima_kana {
           ss >> id;
         }
       }
-      try {
-        AccountInfo &tmp = acc.get_usr(c_id, id);
-        std::cout << tmp << '\n';
-      } catch (const ErrorException &e) {
+      AccountInfo *tmp = acc.get_usr(c_id, id);
+      if (!tmp) {
         std::cout << "-1\n";
+      } else {
+        std::cout << *tmp << '\n';
       }
     }
 
@@ -145,37 +145,37 @@ namespace arima_kana {
         }
       }
 
-      try {
-        AccountInfo &tmp = acc.get_usr(c_id, id);
+      AccountInfo *tmp = acc.get_usr(c_id, id);
+      if (tmp) {
         short c_priv = acc.get_priv(c_id);
         if (flag[3] && c_priv <= priv) {
-          error("modify-priv: privilege not enough");
+          std::cout << "-1\n";
+          return;
         }
         if (flag[0]) {
-          tmp.pw = pw;
+          tmp->pw = pw;
         }
         if (flag[1]) {
-          tmp.nm = nm;
+          tmp->nm = nm;
         }
         if (flag[2]) {
-          tmp.mail = mail;
+          tmp->mail = mail;
         }
         if (flag[3]) {
-          tmp.priv = priv;
+          tmp->priv = priv;
         }
-        std::cout << tmp << '\n';
-      } catch (const ErrorException &e) {
-        std::cout << -1 << '\n';
+        std::cout << *tmp << '\n';
+      } else {
+        std::cout << "-1\n";
       }
     }
 
     inline void handle_add_train() {
       std::string train_param;
       getline(ss, train_param);
-      try {
-        tr.add_train(train_param);
+      if (tr.add_train(train_param)) {
         std::cout << "0\n";
-      } catch (const ErrorException &e) {
+      } else {
         std::cout << -1 << '\n';
       }
     }
@@ -187,11 +187,10 @@ namespace arima_kana {
       if (param[1] == 'i') {
         ss >> tr_id;
       }
-      try {
-        tr.delete_train(tr_id);
+      if (tr.delete_train(tr_id)) {
         std::cout << "0\n";
-      } catch (const ErrorException &e) {
-        std::cout << -1 << '\n';
+      } else {
+        std::cout << "-1\n";
       }
     }
 
@@ -202,11 +201,10 @@ namespace arima_kana {
       if (param[1] == 'i') {
         ss >> tr_id;
       }
-      try {
-        tr.release_train(tr_id);
+      if (tr.release_train(tr_id)) {
         std::cout << "0\n";
-      } catch (const ErrorException &e) {
-        std::cout << -1 << '\n';
+      } else {
+        std::cout << "-1\n";
       }
     }
 
@@ -221,11 +219,7 @@ namespace arima_kana {
         std::cout << "-1\n"; // Not logged in
         return;
       }
-      try {
-        ord.query_order(c_id);
-      } catch (const ErrorException &e) {
-        std::cout << -1 << '\n';
-      }
+      ord.query_order(c_id);
     }
 
     inline void handle_refund_ticket() {
@@ -340,11 +334,7 @@ namespace arima_kana {
           ss >> d;
         }
       }
-      try {
-        tr.query_train(tr_id, d);
-      } catch (const ErrorException &e) {
-        std::cout << -1 << '\n';
-      }
+      tr.query_train(tr_id, d);
     }
 
     inline void handle_query_ticket() {
@@ -365,11 +355,7 @@ namespace arima_kana {
           if (p == "cost") is_time = false;
         }
       }
-      try {
-        tr.query_ticket(from, to, d, is_time);
-      } catch (const ErrorException &e) {
-        std::cout << 0 << '\n';
-      }
+      tr.query_ticket(from, to, d, is_time);
     }
 
     inline void handle_query_transfer() {

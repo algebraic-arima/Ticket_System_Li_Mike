@@ -90,19 +90,22 @@ namespace arima_kana {
         return true;
       }
 
-      AccountInfo &get_usr(const acc_id &c_id, const acc_id &id) {
+      AccountInfo *get_usr(const acc_id &c_id, const acc_id &id) {
         auto it = login_list.find(c_id);
         if (it == login_list.end()) {
-          error("get_usr: cur user not logged in");
+//          error("get_usr: cur user not logged in");
+          return nullptr;
         }
         AccountInfo *pos = list.find(id);
         if (!pos) {
-          error("User not found or duplicated");
+//          error("User not found or duplicated");
+          return nullptr;
         }
         if (c_id != id && it->second <= pos->priv) {
-          error("privilege not enough");
+          return nullptr;
+//          error("privilege not enough");
         }
-        return *pos;
+        return pos;
       }
 
       short get_priv(const acc_id &c_id) {

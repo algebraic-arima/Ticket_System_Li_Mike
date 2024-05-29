@@ -207,7 +207,6 @@ namespace arima_kana {
       date start_date;
       int date_num = 0;
       char type = '\0';
-      bool released = false;
     public:
       TrainInfo() = default;
 
@@ -270,7 +269,7 @@ namespace arima_kana {
       Train() : train_list("2train"), edge_list("3edge"),
                 station_train_to_ind("7statrtoi") {}
 
-      void add_train(const std::string &param) {
+      bool add_train(const std::string &param) {
         TrainInfo tmp;
         std::stringstream ss(param);
         std::string op;
@@ -312,7 +311,8 @@ namespace arima_kana {
         }
         TrainInfo *t = train_list.find(tmp.t_id);
         if (t != nullptr) {
-          error("train id duplicated");
+//          error("train id duplicated");
+          return false;
         }
         ss.str(stations);
         ss.clear();
@@ -345,7 +345,8 @@ namespace arima_kana {
         ss.str(sale_date);
         ss.clear();
         if (sale_date.size() != 11 || sale_date[5] != '|') {
-          error("invalid_date");
+//          error("invalid_date");
+          return false;
         }
         std::string s = sale_date.substr(0, 5);
         std::string e = sale_date.substr(6, 5);
@@ -354,15 +355,16 @@ namespace arima_kana {
         tmp.occupied_seat_index = seat_list.train_num + 1;
         train_list.insert(tmp.t_id, tmp);
         seat_list.add_new_train(tmp.date_num, tmp.station_num - 1, tmp.seat_num);
+        return true;
       }
 
-      void release_train(const train_id &t_id) {
+      bool release_train(const train_id &t_id) {
+        if (!train_list.release(t_id)) {
+//          error("train has been released");
+          return false;
+        }
         TrainInfo *t = train_list.find(t_id);
         TrainInfo &tmp = *t;
-        if (tmp.released) {
-          error("train has been released");
-        }
-        tmp.released = true;
         time cur_time = tmp.start_time;
         EdgeInfo edge;
         edge.start_date = tmp.start_date;
@@ -393,14 +395,16 @@ namespace arima_kana {
         edge.t_id = t_id;
         edge_list.insert(edge.from, edge);
         station_train_to_ind.insert(pair(tmp.stations[i], t_id), edge);
+        return true;
       }
 
-      void delete_train(const train_id &t_id) {
-        TrainInfo *t = train_list.find(t_id);
-        if (t->released) {
-          error("train has been released");
+      bool delete_train(const train_id &t_id) {
+        if (train_list.is_released(t_id)) {
+//          error("train has been released");
+          return false;
         }
         train_list.remove(t_id);
+        return true;
       }
 
       void query_train(const train_id &id, const date &d) {
@@ -410,7 +414,8 @@ namespace arima_kana {
 
       void print_train(TrainInfo *tr, date d) {
         if (d < tr->start_date || tr->start_date + tr->date_num - 1 < d) {
-          error("train not available on this date");
+          std::cout << "-1\n";
+          return;
         }
         std::cout << tr->t_id << ' ' << tr->type << '\n';
         int date_index = d - tr->start_date;
@@ -468,24 +473,23 @@ namespace arima_kana {
 
       struct transfer_info {
         query_info q1, q2;
+        int il = 0;
+        int price = 0;
 
         friend std::ostream &operator<<(std::ostream &os, const transfer_info &q) {
           os << q.q1 << '\n' << q.q2;
           return os;
         }
 
-        inline int price() const {
-          return q1.price + q2.price;
-        }
-
-        inline int interval() const {
+        inline void get() {
           int tmp = q2.e_d - q1.s_d;
           time t1 = q1.s_t, t2 = q2.e_t;
           if (t2 < t1) {
             --tmp;
             t2.h += 24;
           }
-          return tmp * 24 * 60 + (t2 - t1);
+          il = tmp * 24 * 60 + (t2 - t1);
+          price = q1.price + q2.price;
         }
       };
 
@@ -498,7 +502,8 @@ namespace arima_kana {
         vector<EdgeInfo> e = edge_list.find(s, true);
         vector<EdgeInfo> f = edge_list.find(t, true);
         if (e.size() == 0 || f.size() == 0) {
-          error("no such station included in released trains");
+          std::cout << "0\n";
+          return;
         }
         int p1 = 0, p2 = 0;
 
@@ -588,7 +593,8 @@ namespace arima_kana {
         vector<EdgeInfo> e = edge_list.find(s, true);
         vector<EdgeInfo> f = edge_list.find(t, true);
         if (e.size() == 0 || f.size() == 0) {
-          error("no such station included in released trains");
+          std::cout << "0\n";
+          return;
         }
 
         vector<transfer_info> result;
@@ -721,6 +727,7 @@ namespace arima_kana {
             q2.price = j.price;
             q2.vacant_seat = seat_list.search_seat(j.occupied_seat_index,
                                                    origin_date_2 - j.s_d, j.from, j.to);
+            res.get();
             result.push_back(res);
           }
         }
@@ -732,18 +739,18 @@ namespace arima_kana {
 
         if (is_time) {
           sort(result.begin(), result.end() - 1, [](const transfer_info &a, const transfer_info &b) {
-            return a.interval() < b.interval()
-                   || (a.interval() == b.interval() && a.price() < b.price())
-                   || (a.interval() == b.interval() && a.price() == b.price() && a.q1.t_id < b.q1.t_id)
-                   || (a.interval() == b.interval() && a.price() == b.price() && a.q1.t_id == b.q1.t_id &&
+            return a.il < b.il
+                   || (a.il == b.il && a.price < b.price)
+                   || (a.il == b.il && a.price == b.price && a.q1.t_id < b.q1.t_id)
+                   || (a.il == b.il && a.price == b.price && a.q1.t_id == b.q1.t_id &&
                        a.q2.t_id < b.q2.t_id);
           });
         } else {
           sort(result.begin(), result.end() - 1, [](const transfer_info &a, const transfer_info &b) {
-            return a.price() < b.price()
-                   || (a.price() == b.price() && a.interval() < b.interval())
-                   || (a.price() == b.price() && a.interval() == b.interval() && a.q1.t_id < b.q1.t_id)
-                   || (a.price() == b.price() && a.interval() == b.interval() && a.q1.t_id == b.q1.t_id &&
+            return a.price < b.price
+                   || (a.price == b.price && a.il < b.il)
+                   || (a.price == b.price && a.il == b.il && a.q1.t_id < b.q1.t_id)
+                   || (a.price == b.price && a.il == b.il && a.q1.t_id == b.q1.t_id &&
                        a.q2.t_id < b.q2.t_id);
           });
         }
@@ -819,9 +826,6 @@ namespace arima_kana {
         TrainInfo *t = train_list.find(t_id);
         time st;
         TrainInfo &tmp = *t;
-        if (!tmp.released) {
-          return false;
-        }
         int date_index = d - tmp.start_date;
         int start = -1, end = -1;
         time cur_time = tmp.start_time;
