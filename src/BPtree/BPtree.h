@@ -307,7 +307,8 @@ namespace arima_kana {
       size_t free_num = 0;
       std::fstream index_filer;
       std::string index_file;
-      List_Map_Buffer<Node, size_t, 3, 100> list;
+      List_Map_Buffer<Node, size_t, 3, 1000> list;
+
 //      arima_kana::vector<size_t> free_pos;
 
       explicit BPTree(const std::string &ifn) :
