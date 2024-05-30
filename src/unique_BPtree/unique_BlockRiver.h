@@ -75,22 +75,6 @@ namespace arima_kana {
         ++block_num;
       }
 
-      void write_main(DNode &t, const int pos) {
-        if (pos > block_num) return;
-        data_filer.open(data_file, std::ios::out | std::ios::in | std::ios::binary);
-        data_filer.seekp(sizeof(block_num) + (pos - 1) * SIZE_DNODE);
-        data_filer.write(reinterpret_cast<char *> (&t), SIZE_DNODE);
-        data_filer.close();
-      }
-
-      void read_main(DNode &t, const int pos) {
-        if (pos > block_num) return;
-        data_filer.open(data_file, std::ios::in | std::ios::binary);
-        data_filer.seekg(sizeof(block_num) + (pos - 1) * SIZE_DNODE);
-        data_filer.read(reinterpret_cast<char *> (&t), SIZE_DNODE);
-        data_filer.close();
-      }
-
       void insert(const K &k, const V &v) {
         KV kv = {k, v};
         //std::cout<<tv.key<<tv.pos;
@@ -163,7 +147,7 @@ namespace arima_kana {
         return nullptr;
       }
 
-      V find(const K &k, bool flag) {
+      V find(const K &k,const bool &flag) {
         vector<size_t> tmp = list.find(k);
         for (int i = 0; i < tmp.size(); i++) {
           DNode &t = data_list[tmp[i]];
