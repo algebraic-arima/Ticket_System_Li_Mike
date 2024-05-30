@@ -236,6 +236,7 @@ namespace arima_kana {
     class EdgeInfo {
     public:
       station_name from;
+      train_id t_id;
       time start_time{};
       int station_ind = 0;
       int stop_time = 0;
@@ -244,7 +245,7 @@ namespace arima_kana {
       int price_till_now = 0;
       int occupied_seat_index = 0;
       int max_possible_seat = 0;
-      train_id t_id;
+
 
       EdgeInfo() = default;
 
@@ -264,10 +265,10 @@ namespace arima_kana {
     public:
       // block_num, bp_max, bp_min, block_buffer_size
       unique_ind_ext_BPtree<train_id, TrainInfo, 136, 186, 92, 60, 20> train_list;
-      BlockRiver<station_name, EdgeInfo, 26, 26, 12, 200, 200> edge_list;
+      BlockRiver<station_name, EdgeInfo, 26, 26, 12, 160, 160> edge_list;
       //tree: (44+108)*26*100=400kb
       //data: (44+108)*26*100=400kb
-      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 24, 62, 30, 200, 200> station_train_to_ind;
+      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 24, 62, 30, 160, 160> station_train_to_ind;
       //tree: (44+22)*62*100=400kb
       //data: (44+22+108)*24*100=400kb
 
@@ -614,78 +615,80 @@ namespace arima_kana {
         vector<transfer_info> result;
         vector<candidate> pos_1;
 
+        TrainInfo *tr1 = train_list.find(e[0].t_id);
         for (auto &i: e) {
-          train_id &t1 = i.t_id;
-          TrainInfo *tr1 = train_list.find(t1);
-          TrainInfo &tmp1 = *tr1;
+          if (i.t_id != tr1->t_id) {
+            tr1 = train_list.find(i.t_id);
+          }
           date origin_start_date = d - i.start_time.h / 24;
-          if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num - 1 < origin_start_date) {
+          if (origin_start_date < tr1->start_date || tr1->start_date + tr1->date_num - 1 < origin_start_date) {
             continue;
           }// not in the sale date
           int st1 = -1;
           candidate tmp;
-          for (int j = 0; j < tmp1.station_num; ++j) {
+          for (int j = 0; j < tr1->station_num; ++j) {
             if (st1 != -1) {
               pos_1.push_back(tmp);
-              tmp.time_interval += tmp1.stopover_time[j - 1] + tmp1.travel_time[j];
-              tmp.e_t += tmp1.stopover_time[j - 1] + tmp1.travel_time[j];
+              tmp.time_interval += tr1->stopover_time[j - 1] + tr1->travel_time[j];
+              tmp.e_t += tr1->stopover_time[j - 1] + tr1->travel_time[j];
               ++tmp.to;
-              tmp.sta = tmp1.stations[tmp.to];
-              tmp.price = tmp1.price[j + 1] - tmp1.price[st1];
+              tmp.sta = tr1->stations[tmp.to];
+              tmp.price = tr1->price[j + 1] - tr1->price[st1];
             }
-            if (tmp1.stations[j] == s) {
+            if (tr1->stations[j] == s) {
               st1 = j;
-              tmp.t_id = t1;
-              tmp.s_d = tmp1.start_date;
-              tmp.e_d = tmp1.start_date + (tmp1.date_num - 1);
+              tmp.t_id = i.t_id;
+              tmp.s_d = tr1->start_date;
+              tmp.e_d = tr1->start_date + (tr1->date_num - 1);
               tmp.s_t = i.start_time;
-              tmp.e_t = i.start_time + tmp1.travel_time[j];
+              tmp.e_t = i.start_time + tr1->travel_time[j];
               // from s_d to e_d, s_t to e_t every day
-              tmp.time_interval = tmp1.travel_time[j];
+              tmp.time_interval = tr1->travel_time[j];
               tmp.from = j;
               tmp.to = j + 1;
-              tmp.occupied_seat_index = tmp1.occupied_seat_index;
-              tmp.sta = tmp1.stations[tmp.to];
-              tmp.price = tmp1.price[j + 1] - tmp1.price[j];
+              tmp.occupied_seat_index = tr1->occupied_seat_index;
+              tmp.sta = tr1->stations[tmp.to];
+              tmp.price = tr1->price[j + 1] - tr1->price[j];
             }
           }
         }
 
         vector<candidate> pos_2;
+        TrainInfo *tr2 = train_list.find(f[0].t_id);
         for (auto &j: f) {
-          train_id &t2 = j.t_id;
-          TrainInfo *tr2 = train_list.find(t2);
-          TrainInfo &tmp2 = *tr2;
+          if (j.t_id != tr2->t_id) {
+            tr2 = train_list.find(j.t_id);
+          }
           int st2 = -1;
           candidate tmp;
-          for (int k = tmp2.station_num - 1; k >= 0; --k) {
+          for (int k = tr2->station_num - 1; k >= 0; --k) {
             if (st2 != -1) {
               pos_2.push_back(tmp);
               if (k == 0) break;
-              tmp.time_interval += tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
-              tmp.s_t -= tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1];
+              tmp.time_interval += tr2->stopover_time[k - 1] + tr2->travel_time[k - 1];
+              tmp.s_t -= tr2->stopover_time[k - 1] + tr2->travel_time[k - 1];
               while (tmp.s_t.h < 0) {
                 tmp.s_t.h += 24;
                 tmp.s_d -= 1;
               }
               --tmp.from;
-              tmp.sta = tmp2.stations[tmp.from];
-              tmp.price = tmp2.price[st2] - tmp2.price[k - 1];
+              tmp.sta = tr2->stations[tmp.from];
+              tmp.price = tr2->price[st2] - tr2->price[k - 1];
             }
-            if (tmp2.stations[k] == t && k != 0) {
+            if (tr2->stations[k] == t && k != 0) {
               st2 = k;
-              tmp.t_id = t2;
-              tmp.s_d = tmp2.start_date;
-              tmp.e_d = tmp2.start_date + (tmp2.date_num - 1);
-              tmp.e_t = j.start_time - tmp2.stopover_time[k - 1];
-              tmp.s_t = j.start_time - (tmp2.stopover_time[k - 1] + tmp2.travel_time[k - 1]);
+              tmp.t_id = j.t_id;
+              tmp.s_d = tr2->start_date;
+              tmp.e_d = tr2->start_date + (tr2->date_num - 1);
+              tmp.e_t = j.start_time - tr2->stopover_time[k - 1];
+              tmp.s_t = j.start_time - (tr2->stopover_time[k - 1] + tr2->travel_time[k - 1]);
               // from s_d to e_d, s_t to e_t every day
-              tmp.time_interval = tmp2.travel_time[k - 1];
+              tmp.time_interval = tr2->travel_time[k - 1];
               tmp.from = k - 1;
               tmp.to = k;
-              tmp.occupied_seat_index = tmp2.occupied_seat_index;
-              tmp.sta = tmp2.stations[tmp.from];
-              tmp.price = tmp2.price[k] - tmp2.price[k - 1];
+              tmp.occupied_seat_index = tr2->occupied_seat_index;
+              tmp.sta = tr2->stations[tmp.from];
+              tmp.price = tr2->price[k] - tr2->price[k - 1];
             }
           }
         }

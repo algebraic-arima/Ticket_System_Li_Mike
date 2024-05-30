@@ -408,6 +408,14 @@ namespace arima_kana {
       }
     }
 
+    inline void handle_clean() {
+//      acc.clear();
+//      tr.clear();
+//      ord.clear();
+//      pend.clear();
+      std::cout << "0\n";
+    }
+
     bool handle(const std::string &str) {
       ss.clear();
       ss.str(str);
@@ -492,7 +500,7 @@ namespace arima_kana {
         handle_buy_ticket();
 //        timer14.stop();
       } else if (c1 == 'c') {
-        // clean
+        handle_clean();
       }
       return true;
     }

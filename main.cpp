@@ -9,11 +9,9 @@ int arima_kana::timestamp = 0;
 using arima_kana::handle;
 
 int main() {
-  std::ofstream log("log.txt", std::ios::out);
-  log.close();
   std::ios::sync_with_stdio(false);
-//  std::cin.tie(nullptr);
-//  std::cout.tie(nullptr);
+  std::cin.tie(nullptr);
+  std::cout.tie(nullptr);
   std::string str;
   while (true) {
     try {
