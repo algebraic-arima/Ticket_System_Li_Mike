@@ -65,8 +65,8 @@ namespace arima_kana {
         pend_list.insert(tsi, order);
       }
 
-      void get_pending(const int &tr_id, const date &d, vector <PendingInfo> &res1) {
-        vector < PendingInfo > res;
+      void get_pending(const int &tr_id, const date &d, vector<PendingInfo> &res1) {
+        vector<PendingInfo> res;
         pend_list.find(tr_id, true, res);
         for (auto &i: res) {
           if (i.d < d + 4 && d - 4 < i.d) {
