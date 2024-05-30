@@ -142,7 +142,7 @@ namespace arima_kana {
       }
     };
 
-    template<class T, class _alloc=std::allocator<T>>
+    template<class T, class _alloc = std::allocator<T>>
     class vector {
       T *data;
       size_t _size;

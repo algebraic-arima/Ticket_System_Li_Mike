@@ -6,6 +6,7 @@
 #include <fstream>
 #include <map>
 #include "map.h"
+#include "unordered_map.h"
 
 namespace arima_kana {
     template<class T, class pre, size_t num>
@@ -189,7 +190,7 @@ namespace arima_kana {
       Node *head;
       Node *tail;
       size_t _size;
-      std::unordered_map<size_t, Node *> m;
+      unordered_map<Node *, _cap> m;
 
 
     public:
@@ -233,9 +234,9 @@ namespace arima_kana {
       }
 
       T &operator[](size_t pos) {
-        auto it = m.find(pos);
-        if (it != m.end()) {
-          Node *tmp = it->second;
+        Node** it = m.find(pos);
+        if (it) {
+          Node *tmp = *it;
           if (tmp->pos == pos) {
             tmp->prev->next = tmp->next;
             tmp->next->prev = tmp->prev;
@@ -251,7 +252,7 @@ namespace arima_kana {
 //        new_n->copy = new_n->data;
         head->next->prev = new_n;
         head->next = new_n;
-        m.insert({pos, new_n});
+        m.insert(pos, new_n);
         ++_size;
         if (_size > _cap) {
           Node *tmp = tail->prev;

@@ -614,10 +614,14 @@ namespace arima_kana {
         vector<transfer_info> result;
         vector<candidate> pos_1;
 
+        TrainInfo *tr1 = train_list.find(e[0].t_id);
+        TrainInfo &tmp1 = *tr1;
         for (auto &i: e) {
           train_id &t1 = i.t_id;
-          TrainInfo *tr1 = train_list.find(t1);
-          TrainInfo &tmp1 = *tr1;
+          if (i.t_id != tr1->t_id) {
+            tr1 = train_list.find(t1);
+            tmp1 = *tr1;
+          }
           date origin_start_date = d - i.start_time.h / 24;
           if (origin_start_date < tmp1.start_date || tmp1.start_date + tmp1.date_num - 1 < origin_start_date) {
             continue;
@@ -652,10 +656,14 @@ namespace arima_kana {
         }
 
         vector<candidate> pos_2;
+        TrainInfo *tr2 = train_list.find(f[0].t_id);
+        TrainInfo &tmp2 = *tr2;
         for (auto &j: f) {
           train_id &t2 = j.t_id;
-          TrainInfo *tr2 = train_list.find(t2);
-          TrainInfo &tmp2 = *tr2;
+          if (j.t_id != tr2->t_id) {
+            tr2 = train_list.find(t2);
+            tmp2 = *tr2;
+          }
           int st2 = -1;
           candidate tmp;
           for (int k = tmp2.station_num - 1; k >= 0; --k) {
