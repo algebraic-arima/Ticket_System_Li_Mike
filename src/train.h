@@ -263,11 +263,11 @@ namespace arima_kana {
     class Train {
     public:
       // block_num, bp_max, bp_min, block_buffer_size
-      unique_ind_ext_BPtree<train_id, TrainInfo, 136, 186, 92, 60, 60> train_list;
-      BlockRiver<station_name, EdgeInfo, 26, 26, 12, 100, 100> edge_list;
+      unique_ind_ext_BPtree<train_id, TrainInfo, 136, 186, 92, 60, 20> train_list;
+      BlockRiver<station_name, EdgeInfo, 26, 26, 12, 200, 200> edge_list;
       //tree: (44+108)*26*100=400kb
       //data: (44+108)*26*100=400kb
-      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 24, 62, 30, 100, 100> station_train_to_ind;
+      unique_BlockRiver<pair<station_name, train_id>, EdgeInfo, 24, 62, 30, 200, 200> station_train_to_ind;
       //tree: (44+22)*62*100=400kb
       //data: (44+22+108)*24*100=400kb
 

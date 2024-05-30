@@ -321,9 +321,9 @@ namespace arima_kana {
         T mid = *l;
         while (i != j) {
           while (i != j && !cmp(*j, mid)) j--;
-          if (i != j) *i = *j;
+          if (i != j) std::swap(*i, *j);
           while (i != j && cmp(*i, mid)) i++;
-          if (i != j) *j = *i;
+          if (i != j) std::swap(*i, *j);
         }
         *i = mid;
         sort(l, i - 1, cmp);

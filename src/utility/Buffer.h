@@ -191,6 +191,7 @@ namespace arima_kana {
       size_t _size;
       std::unordered_map<size_t, Node *> m;
 
+
     public:
 
       explicit List_Map_Buffer(const std::string &fn) :
