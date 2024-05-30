@@ -2,9 +2,10 @@
 
 SJTU CS1951 课程大作业
 
-![What is TS](/images/TS.png)
+[//]: # (![What is TS]&#40;/images/TS.png&#41;)
 
-*当然是Ticket System啦！*
+[//]: # ()
+[//]: # (*当然是Ticket System啦！*)
 
 ## 文件结构
 ``````
