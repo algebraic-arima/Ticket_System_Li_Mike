@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_TIMER_H
 #define TICKET_SYSTEM_TIMER_H
+#pragma once
 
 #include <chrono>
 #include <cstdio>
@@ -12,7 +13,7 @@ private:
   const char *name;
   std::ofstream logFile;  // Add this line
 public:
-  Timer(const char *s) : name(s), totduration(0) {
+  explicit Timer(const char *s) : name(s), totduration(0) {
     logFile.open("timer_log.txt", std::ios::app);
   }
 
@@ -25,7 +26,7 @@ public:
     totduration += std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
   }
 
-  double duration() {
+  double duration() const {
     return (double) totduration * std::chrono::nanoseconds::period::num / std::chrono::nanoseconds::period::den;
   }
 

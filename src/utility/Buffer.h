@@ -35,7 +35,7 @@ namespace arima_kana {
       std::fstream file;
       std::string name;
     public:
-      Buffer(const std::string &fn) : name(fn) {}
+      explicit Buffer(const std::string &fn) : name(fn) {}
 
     };
 

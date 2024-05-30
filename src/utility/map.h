@@ -1,5 +1,6 @@
 #ifndef BPTREE_MAP_H
 #define BPTREE_MAP_H
+#pragma once
 
 // only for std::less<T>
 #include <functional>

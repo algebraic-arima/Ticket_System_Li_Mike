@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_TRAIN_H
 #define TICKET_SYSTEM_TRAIN_H
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -9,7 +10,6 @@
 #include "unique_BlockRiver.h"
 #include "seat.h"
 #include "unique_ind_ext_BPtree.h"
-
 
 namespace arima_kana {
     extern int timestamp;

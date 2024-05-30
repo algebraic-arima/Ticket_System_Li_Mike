@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_LI_MIKE_ACCOUNT_H
 #define TICKET_SYSTEM_LI_MIKE_ACCOUNT_H
+#pragma once
 
 #include "unique_BlockRiver.h"
 #include <map>
@@ -41,7 +42,7 @@ namespace arima_kana {
 
     class Account {
     public:
-      unique_BlockRiver<acc_id, AccountInfo, 32, 180, 88, 30, 30> list;
+      unique_BlockRiver<acc_id, AccountInfo, 32, 180, 88, 50, 50> list;
       //tree: 22*180*100=400kb
       //data: (22+104)*32*100=400kb
       map<acc_id, short> login_list;

@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_ORDER_H
 #define TICKET_SYSTEM_ORDER_H
+#pragma once
 
 #include "account.h"
 #include "train.h"
@@ -130,4 +131,4 @@ namespace arima_kana {
     };
 }
 
-#endif //TICKET_SYSTEM_ORDER_H
+#endif

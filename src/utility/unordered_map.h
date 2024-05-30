@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_UNORDERED_MAP_H
 #define TICKET_SYSTEM_UNORDERED_MAP_H
+#pragma once
 
 #include <iostream>
 #include "utility.h"
@@ -65,6 +66,7 @@ namespace arima_kana {
       }
 
       void clear() {
+        size = 0;
         for (int i = 0; i < _cap; ++i) {
           Node *p = data[i];
           while (p) {
@@ -74,7 +76,6 @@ namespace arima_kana {
           }
           data[i] = nullptr;
         }
-        size = 0;
       }
 
       ~unordered_map() {

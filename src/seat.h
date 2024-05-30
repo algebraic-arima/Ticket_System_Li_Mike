@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_SEAT_H
 #define TICKET_SYSTEM_SEAT_H
+#pragma once
 
 #include <iostream>
 #include <fstream>

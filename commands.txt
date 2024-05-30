@@ -1,16 +1,16 @@
-add_user as -2
-login lg -2
-logout lo -2
-query_profile qi -5
-modify_profile mi -1
-add_train aa -2
-delete_train da -1
-release_train ra -2
-query_train qa -5
-query_ticket qk -5
-query_transfer qf -5
-buy_ticket bk -1
-query_order qd -5
-refund_ticket rk -2
-clean ce -1
-exit ex -1
+add_user as 
+login lg 
+logout lo 
+query_profile qi 
+modify_profile mi 
+add_train aa 
+delete_train da 
+release_train ra 
+query_train qa 
+query_ticket qk 
+query_transfer qf 
+buy_ticket bk 
+query_order qd 
+refund_ticket rk 
+clean ce 
+exit ex 

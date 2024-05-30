@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_PENDING_H
 #define TICKET_SYSTEM_PENDING_H
+#pragma once
 
 #include "train.h"
 #include "account.h"

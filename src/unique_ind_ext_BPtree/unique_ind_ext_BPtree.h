@@ -1,12 +1,12 @@
 #ifndef TICKET_SYSTEM_UNIQUE_IND_EXT_BPTREE_H
 #define TICKET_SYSTEM_UNIQUE_IND_EXT_BPTREE_H
+#pragma once
 
 #include <iostream>
 #include <fstream>
 #include "unique_BlockRiver.h"
 
 namespace arima_kana {
-
 
     template<class K, class V, size_t block, size_t bp_max, size_t bp_min, size_t buf_max, size_t bpt_buf_max>
     class unique_ind_ext_BPtree {

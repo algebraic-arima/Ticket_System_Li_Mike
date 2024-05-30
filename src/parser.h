@@ -1,5 +1,6 @@
 #ifndef TICKET_SYSTEM_PARSER_H
 #define TICKET_SYSTEM_PARSER_H
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -8,7 +9,7 @@
 #include "error.h"
 #include "order.h"
 #include "pending.h"
-#include "timer.h"
+//#include "timer.h"
 
 namespace arima_kana {
 
