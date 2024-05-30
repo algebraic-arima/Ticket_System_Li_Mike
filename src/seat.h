@@ -60,17 +60,24 @@ namespace arima_kana {
         file.close();
       }
 
-      void add_new_train(int d, int s, int n) {
+      void add_new_train(int ds, int de, int s, int n) {
         train_num++;
         SeatInfo tmp(s, n), e;
         int cnt = 100;
         file.open(name, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
-        while (d--) {
-          file.write(reinterpret_cast<char *>(&tmp), sizeof(SeatInfo));
-          cnt--;
-        }
-        while (cnt--)
+        ++de;
+        while (ds--) {
           file.write(reinterpret_cast<char *>(&e), sizeof(SeatInfo));
+          --cnt;
+          --de;
+        }
+        while (de--) {
+          file.write(reinterpret_cast<char *>(&tmp), sizeof(SeatInfo));
+          --cnt;
+        }
+        while (cnt--) {
+          file.write(reinterpret_cast<char *>(&e), sizeof(SeatInfo));
+        }
         file.close();
       }
 

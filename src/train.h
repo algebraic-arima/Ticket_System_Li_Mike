@@ -20,25 +20,52 @@ namespace arima_kana {
     class date {
     public:
       // year 2024
-      int m, d;
+      int dd; // date_index from 2024-06-01
       constexpr static int month_days[13] =
               {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-      explicit date(int mm = 0, int dd = 0) : m(mm), d(dd) {}
+      explicit date() : dd(-1) {}
+
+      explicit date(int mm, int dd) : dd(dd) {
+        for (int i = 6; i < mm; i++) {
+          dd += month_days[i];
+        }
+      }
 
       explicit date(const std::string &s) {
         if (s.size() != 5 || s[2] != '-') {
           error("invalid_date");
         }
-        m = (s[0] - '0') * 10 + s[1] - '0';
-        d = (s[3] - '0') * 10 + s[4] - '0';
+        int m = (s[0] - '0') * 10 + s[1] - '0';
+        dd = (s[3] - '0') * 10 + s[4] - '0';
+        if (m == 6) {
+          --dd;
+        } else if (m == 7) {
+          dd += 29;
+        } else if (m == 8) {
+          dd += 60;
+        }
       }
 
       friend std::ostream &operator<<(std::ostream &os, const date &da) {
-        if (da.m < 10) os << '0';
-        os << da.m << '-';
-        if (da.d < 10) os << '0';
-        os << da.d;
+        if (da.dd >= 92) {
+          os << "09-";
+          if (da.dd - 91 < 10) os << '0';
+          os << da.dd - 91;
+          return os;
+        } else if (da.dd >= 61 && da.dd <= 91) {
+          os << "08-";
+          if (da.dd - 60 < 10) os << '0';
+          os << da.dd - 60;
+        } else if (da.dd >= 30 && da.dd <= 60) {
+          os << "07-";
+          if (da.dd - 29 < 10) os << '0';
+          os << da.dd - 29;
+        } else {
+          os << "06-";
+          if (da.dd + 1 < 10) os << '0';
+          os << da.dd + 1;
+        }
         return os;
       }
 
@@ -48,38 +75,28 @@ namespace arima_kana {
         if (s.size() != 5 || s[2] != '-') {
           error("invalid_date");
         }
-        da.m = (s[0] - '0') * 10 + s[1] - '0';
-        da.d = (s[3] - '0') * 10 + s[4] - '0';
+        int m = (s[0] - '0') * 10 + s[1] - '0';
+        da.dd = (s[3] - '0') * 10 + s[4] - '0';
+        if (m == 6) {
+          --da.dd;
+        } else if (m == 7) {
+          da.dd += 29;
+        } else if (m == 8) {
+          da.dd += 60;
+        }
         return is;
       }
 
       bool operator<(const date &rhs) const {
-        return m < rhs.m || (m == rhs.m && d < rhs.d);
+        return dd < rhs.dd;
       }
 
       int operator-(const date &rhs) const {
-        int res = 0;
-        for (int i = rhs.m; i < m; i++) {
-          res += month_days[i];
-        }
-        res += d - rhs.d;
-        return res;
+        return dd - rhs.dd;
       }
 
       date &operator+=(int x) {
-        while (x > 0) {
-          if (month_days[m] - d >= x) {
-            d += x;
-            x = 0;
-          } else {
-            x -= month_days[m] - d;
-            d = 0;
-            m++;
-          }
-          if (m > 12) {
-            m = 1;
-          }
-        }
+        dd += x;
         return *this;
       }
 
@@ -90,15 +107,7 @@ namespace arima_kana {
       }
 
       date &operator-=(int x) {
-        while (x > 0) {
-          if (d > x) {
-            d -= x;
-            x = 0;
-          } else {
-            x -= d;
-            d = month_days[--m];
-          }
-        }
+        dd -= x;
         return *this;
       }
 
@@ -109,11 +118,11 @@ namespace arima_kana {
       }
 
       bool operator==(const date &rhs) const {
-        return m == rhs.m && d == rhs.d;
+        return dd == rhs.dd;
       }
 
       bool operator!=(const date &rhs) const {
-        return m != rhs.m || d != rhs.d;
+        return dd != rhs.dd;
       }
     };
 
@@ -195,7 +204,7 @@ namespace arima_kana {
       station_name stations[20];
       int seat_num = 0;
       int occupied_seat_index = -1;
-      // on the i-th day, from the j-th to the j+1-th station
+      // on the day i, from the j-th to the j+1-th station
       // date_num * (station_num - 1)
       // stored in another file
       // occupied_seat[date_index][station_index] =
@@ -354,7 +363,8 @@ namespace arima_kana {
         tmp.date_num = date(e) - tmp.start_date + 1;
         tmp.occupied_seat_index = seat_list.train_num + 1;
         train_list.insert(tmp.t_id, tmp);
-        seat_list.add_new_train(tmp.date_num, tmp.station_num - 1, tmp.seat_num);
+        seat_list.add_new_train(tmp.start_date.dd, tmp.start_date.dd + tmp.date_num,
+                                tmp.station_num - 1, tmp.seat_num);
         return true;
       }
 
@@ -418,7 +428,7 @@ namespace arima_kana {
           return;
         }
         std::cout << tr->t_id << ' ' << tr->type << '\n';
-        int date_index = d - tr->start_date;
+        int date_index = d.dd;
         time tmp = tr->start_time;
         SeatInfo &tr_seat = seat_list.get_train_date(tr->occupied_seat_index, date_index);
         for (int i = 0; i < tr->station_num; i++) {
@@ -541,9 +551,8 @@ namespace arima_kana {
           }
           query_info q;
           EdgeInfo &tmpf = f[res_train[i].second];
-          int date_index = origin_start_date - tmpe.start_date;
           int start = tmpe.station_ind, end = tmpf.station_ind;
-          int seat_num = seat_list.search_seat(tmpe.occupied_seat_index, date_index, start, end);
+          int seat_num = seat_list.search_seat(tmpe.occupied_seat_index, origin_start_date.dd, start, end);
 
           q.t_id = tmpe.t_id;
           q.from = s;
@@ -588,6 +597,7 @@ namespace arima_kana {
         int occupied_seat_index = 0;
       };
 
+      // local departure date
       void query_transfer(const station_name &s,
                           const station_name &t,
                           const date &d,
@@ -717,7 +727,7 @@ namespace arima_kana {
             q1.e_t.h %= 24;
             q1.price = i.price;
             q1.vacant_seat = seat_list.search_seat(i.occupied_seat_index,
-                                                   origin_date_1 - i.s_d, i.from, i.to);
+                                                   origin_date_1.dd, i.from, i.to);
             query_info &q2 = res.q2;
             q2.t_id = j.t_id;
             q2.from = j.sta;
@@ -730,7 +740,7 @@ namespace arima_kana {
             q2.e_t.h %= 24;
             q2.price = j.price;
             q2.vacant_seat = seat_list.search_seat(j.occupied_seat_index,
-                                                   origin_date_2 - j.s_d, j.from, j.to);
+                                                   origin_date_2.dd, j.from, j.to);
             res.get();
             result.push_back(res);
           }
@@ -767,7 +777,12 @@ namespace arima_kana {
         std::cout << result[0] << '\n';
       }
 
-      pair<int, int> buy_ticket(time &st, time &ed, const train_id &t_id,
+      //local departure date
+      pair<int, int> buy_ticket(time &st, time &ed,
+                                int &l, int &r,
+                                int &tsi,
+                                date &origin_d,
+                                const train_id &t_id,
                                 const station_name &from,
                                 const station_name &to,
                                 const date &d,
@@ -784,19 +799,20 @@ namespace arima_kana {
           error("seat insatisfiable");
         }
 
-        int date_index = d - e.start_date;
+        int date_index = d.dd;
         int start = e.station_ind, end = f.station_ind;
         if (start >= end) {
           error("end station not in the train route");
         }
         date_index -= e.start_time.h / 24;
-        if (date_index < 0 || date_index >= e.duration_date) {
+        if (date_index < e.start_date.dd || date_index >= e.start_date.dd + e.duration_date) {
           error("invalid date");
         }
         st = e.start_time;
         ed = f.start_time - f.stop_time;
-        ed.h -= st.h / 24 * 24;
-        st.h %= 24;
+        l = start, r = end;
+        tsi = e.occupied_seat_index;
+        origin_d.dd = date_index;
         int price = f.price_till_now - e.price_till_now;
 
         try {
@@ -822,40 +838,13 @@ namespace arima_kana {
 
       /// return true if the train is satisfiable
       /// and then the ticket is bought
-      bool is_satisfiable(const train_id &t_id,
-                          const station_name &from,
-                          const station_name &to,
+      bool is_satisfiable(const size_t &t_id,
+                          const int &from,
+                          const int &to,
                           const date &d,
                           int num) {
-        TrainInfo *t = train_list.find(t_id);
-        time st;
-        TrainInfo &tmp = *t;
-        int date_index = d - tmp.start_date;
-        int start = -1, end = -1;
-        time cur_time = tmp.start_time;
-        for (int i = 0; i < tmp.station_num - 1; i++) {
-          if (tmp.stations[i] == from) {
-            start = i;
-            st = cur_time;
-          }
-          cur_time += tmp.travel_time[i];
-          if (tmp.stations[i] == to) {
-            end = i;
-          }
-          cur_time += tmp.stopover_time[i];
-          if (start != -1 && end != -1) {
-            break;
-          }
-        }
-        if (tmp.stations[tmp.station_num - 1] == to) {
-          end = tmp.station_num - 1;
-        }
-        date_index -= st.h / 24;
-        if (start == -1 || end == -1 || start >= end) {
-          error("end station not in the train route");
-        }
         try {
-          seat_list.buy_seat(tmp.occupied_seat_index, date_index, start, end, num);
+          seat_list.buy_seat(t_id, d.dd, from, to, num);
         } catch (const ErrorException &e) {
           return false;
         }
@@ -868,38 +857,13 @@ namespace arima_kana {
         return true;
       }
 
-      void refund_ticket(const train_id &t_id,
-                         const station_name &from,
-                         const station_name &to,
+      // origin departure date
+      void refund_ticket(const int &t_id,
+                         const int &from,
+                         const int &to,
                          const date &d,
                          int num) {
-        TrainInfo *t = train_list.find(t_id);
-        TrainInfo &tmp = *t;
-        int date_index = d - tmp.start_date;
-        int start = -1, end = -1;
-        time cur_time = tmp.start_time;
-        time st;
-        for (int i = 0; i < tmp.station_num - 1; i++) {
-          if (tmp.stations[i] == from) {
-            start = i;
-            st = cur_time;
-          } else if (tmp.stations[i] == to) {
-            end = i;
-          }
-          cur_time += tmp.travel_time[i];
-          if (start != -1 && end != -1) {
-            break;
-          }
-          cur_time += tmp.stopover_time[i];
-        }
-        if (tmp.stations[tmp.station_num - 1] == to) {
-          end = tmp.station_num - 1;
-        }
-        if (start == -1 || end == -1 || start >= end) {
-          error("invalid_station");
-        }
-        date_index -= st.h / 24;// refund on the origin date
-        seat_list.refund_seat(tmp.occupied_seat_index, date_index, start, end, num);
+        seat_list.refund_seat(t_id, d.dd, from, to, num);
 //        if (t_id == train_id("LeavesofGrass") && origin_date == date{6, 17}) {
 //          std::ofstream log("log.txt", std::ios::app);
 //          log << timestamp << ": refund\n";

@@ -11,18 +11,22 @@ namespace arima_kana {
       size_t order_time = 0;
       train_id tr_id;
       station_name from, to;
-      date d;
-      time s, t; // t may be larger than 24
+      date d; // origin departure date
+      time s, t; // s and t may be larger than 24
       int tot_price = 0, ticket_num = 0;
+      int l = 0, r = 0;
+      int train_seat_index = 0;
       bool success = true;
       bool refunded = true;
 
       OrderInfo() = default;
 
       OrderInfo(const acc_id &buyer_id, size_t order_time, train_id tr_id, station_name from, station_name to,
-                date d, time s, time t, int tot_price, int ticket_num) :
+                date d, time s, time t, int tot_price, int ticket_num,
+                int a, int b, int c) :
               buyer_id(buyer_id), order_time(order_time), tr_id(tr_id), from(from), to(to), d(d), s(s), t(t),
-              tot_price(tot_price), ticket_num(ticket_num) {}
+              tot_price(tot_price), ticket_num(ticket_num),
+              l(a), r(b), train_seat_index(c) {}
 
       bool operator==(const OrderInfo &rhs) const {
         return buyer_id == rhs.buyer_id && order_time == rhs.order_time;
@@ -44,20 +48,17 @@ namespace arima_kana {
             os << "pending";
           }
         }
-        os << "] " << info.tr_id << ' '
+        time ss = info.s, tt = info.t;
+        ss.h %= 24, tt.h %= 24;
+        os << "] " << info.tr_id << " "
            << info.from << " "
-           << info.d << " "
-           << info.s << " -> "
-           << info.to << " ";
-        if (info.t.h >= 24) {
-          int hh = info.t.h % 24, mm = info.t.m;
-          os << info.d + info.t.h / 24 << " " << (hh < 10 ? "0" : "") <<
-             hh << ":" << (mm < 10 ? "0" : "")
-             << info.t.m << " ";
-        } else {
-          os << info.d << " " << info.t << " ";
-        }
-        os << info.tot_price << " " << info.ticket_num;
+           << info.d + info.s.h / 24 << " "
+           << ss << " -> "
+           << info.to << " "
+           << info.d + info.t.h / 24 << " "
+           << tt << " "
+           << info.tot_price << " "
+           << info.ticket_num;
         return os;
       }
     };
@@ -86,17 +87,22 @@ namespace arima_kana {
                      const station_name &to,
                      date d, time s, time t,
                      int tot_price, int ticket_num,
+                     int a, int b, int c,
                      bool success = true) {
         OrderInfo order(c_id, order_time,
                         train_id, from, to,
                         d, s, t,
-                        tot_price, ticket_num);
+                        tot_price, ticket_num,
+                        a, b, c);
         order.success = success;
         order.refunded = false;
         list.insert(order.buyer_id, order);
       }
 
-      OrderInfo *refund_ticket(const acc_id &c_id, int n, bool &is_success, bool &is_pending, bool &is_refunded) {
+      OrderInfo *refund_ticket(const acc_id &c_id,
+                               int n, bool &is_success,
+                               bool &is_pending,
+                               bool &is_refunded) {
         vector<OrderInfo *> orders = list.find(c_id);
         if (orders.size() < n) {
           error("No such order");

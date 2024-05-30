@@ -9,24 +9,29 @@ namespace arima_kana {
     class PendingInfo {
     public:
 
-      PendingInfo() = default;
-
-      PendingInfo(const acc_id mString, size_t i, const train_id mString1, const station_name mString2,
-                  const station_name mString3, date date1, time time1, time time2, int i1, int i2) :
-              buyer_id(mString), order_time(i), tr_id(mString1), from(mString2), to(mString3), d(date1), s(time1),
-              t(time2), tot_price(i1), ticket_num(i2) {}
-
 
       acc_id buyer_id;
+      size_t train_seat_index = 0;
+      int from = 0, to = 0;
       size_t order_time = 0;
-      train_id tr_id;
-      station_name from, to;
-      date d;
-      time s, t; // t may be larger than 24
-      int tot_price = 0, ticket_num = 0;
+      date d;// origin start date
+      int ticket_num = 0;
+
+
+      PendingInfo() = default;
+
+      PendingInfo(const acc_id &c_id, size_t tsi,
+                  int f, int t,
+                  size_t ot, date _d,
+                  int tn) :
+              buyer_id(c_id),
+              train_seat_index(tsi),
+              from(f), to(t),
+              order_time(ot), d(_d),
+              ticket_num(tn) {}
 
       bool operator==(const PendingInfo &rhs) const {
-        return tr_id == rhs.tr_id
+        return train_seat_index == rhs.train_seat_index
                && d == rhs.d
                && order_time == rhs.order_time;
       }
@@ -36,32 +41,32 @@ namespace arima_kana {
       }
 
       bool operator<(const PendingInfo &rhs) const {
-        if (tr_id != rhs.tr_id) return tr_id < rhs.tr_id;
+        if (train_seat_index != rhs.train_seat_index)
+          return train_seat_index < rhs.train_seat_index;
         return order_time < rhs.order_time;
         // first: tr_id, second: order_time
       }
     };
 
     class PendingList {
-      BlockRiver<train_id, PendingInfo, 20, 20, 8, 100, 100> pend_list;
+      BlockRiver<size_t, PendingInfo, 64, 64, 30, 100, 100> pend_list;
 
     public:
       PendingList() : pend_list("6pending") {}
 
       void add_pending(const acc_id &c_id,
                        size_t order_time,
-                       const train_id &tr_id,
-                       const station_name &from,
-                       const station_name &to,
-                       date d, time s, time t,
-                       int tot_price, int ticket_num) {
-        PendingInfo order(c_id, order_time, tr_id, from, to,
-                          d, s, t, tot_price, ticket_num);
-        pend_list.insert(tr_id, order);
+                       size_t tsi,
+                       const int &from,
+                       const int &to,
+                       date d, int ticket_num) {
+        PendingInfo order(c_id, tsi, from, to, order_time,
+                          d, ticket_num);
+        pend_list.insert(tsi, order);
       }
 
-      void get_pending(const train_id &tr_id, const date &d, vector<PendingInfo> &res1) {
-        vector<PendingInfo> res;
+      void get_pending(const int &tr_id, const date &d, vector <PendingInfo> &res1) {
+        vector < PendingInfo > res;
         pend_list.find(tr_id, true, res);
         for (auto &i: res) {
           if (i.d < d + 4 && d - 4 < i.d) {
@@ -71,7 +76,7 @@ namespace arima_kana {
       }
 
       void remove_pending(PendingInfo p) {
-        pend_list.remove(p.tr_id, p);
+        pend_list.remove(p.train_seat_index, p);
       }
 
     };

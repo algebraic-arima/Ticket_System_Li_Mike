@@ -244,12 +244,12 @@ namespace arima_kana {
       try {
         it = ord.refund_ticket(c_id, n, is_success, is_pending, is_refunded);
         if (is_success) {
-          tr.refund_ticket(it->tr_id, it->from, it->to, it->d, it->ticket_num);
+          tr.refund_ticket(it->train_seat_index, it->l, it->r, it->d, it->ticket_num);
         }
         if (is_pending) {
-          PendingInfo p(c_id, it->order_time, it->tr_id,
-                        it->from, it->to, it->d, it->s, it->t,
-                        it->tot_price, it->ticket_num);
+          PendingInfo p(c_id, it->train_seat_index, it->l, it->r,
+                        it->order_time,
+                        it->d, it->ticket_num);
           pend.remove_pending(p);// time cost may be high
         }
         if (is_refunded) {
@@ -262,9 +262,10 @@ namespace arima_kana {
       }
       if (is_success) {
         vector<PendingInfo> pending;
-        pend.get_pending(it->tr_id, it->d, pending);
+        pend.get_pending(it->train_seat_index, it->d, pending);
         for (auto &p: pending) {
-          if (tr.is_satisfiable(p.tr_id, p.from, p.to, p.d, p.ticket_num)) {
+          // p.d: origin departure date
+          if (tr.is_satisfiable(p.train_seat_index, p.from, p.to, p.d, p.ticket_num)) {
             pend.remove_pending(p);
             ord.alt_ticket(p.buyer_id, p.order_time);
           }
@@ -276,6 +277,7 @@ namespace arima_kana {
       acc_id c_id;
       train_id tr_id;
       station_name from, to;
+      std::string dd;
       date d;
       int n;
       bool queue = false;
@@ -291,7 +293,7 @@ namespace arima_kana {
         } else if (param[1] == 't') {
           ss >> to;
         } else if (param[1] == 'd') {
-          ss >> d;
+          ss >> dd;
         } else if (param[1] == 'n') {
           ss >> n;
         } else if (param[1] == 'q') {
@@ -303,20 +305,30 @@ namespace arima_kana {
         std::cout << "-1\n";//Not logged in
         return;
       }
+      if (dd[1] < '6' || dd[1] > '9') {
+        std::cout << -1 << '\n';
+        return;
+      } else {
+        d = date(dd);
+      }
       try {
         time s, t;
-        auto price = tr.buy_ticket(s, t, tr_id, from, to, d, n, queue);
+        int l, r;
+        int tsi;
+        date o_d;
+        auto price = tr.buy_ticket(s, t, l, r, tsi, o_d, tr_id, from, to, d, n, queue);
+        //local departure date
         if (price.first == -1) {
           std::cout << "-1\n";
           return;
         } else if (price.second == -1) {
-          pend.add_pending(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n);
-          ord.add_order(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n, false);
+          pend.add_pending(c_id, timestamp, tsi, l, r, o_d, n);
+          ord.add_order(c_id, timestamp, tr_id, from, to, o_d, s, t, price.first, n, l, r, tsi, false);
           std::cout << "queue\n";
           return;
         } else {
           std::cout << price.first * n << '\n';
-          ord.add_order(c_id, timestamp, tr_id, from, to, d, s, t, price.first, n, true);
+          ord.add_order(c_id, timestamp, tr_id, from, to, o_d, s, t, price.first, n, l, r, tsi, true);
         }
       } catch (const ErrorException &e) {
         std::cout << -1 << '\n';
@@ -326,16 +338,21 @@ namespace arima_kana {
     inline void handle_query_train() {
       std::string param;
       train_id tr_id;
-      date d;
+      std::string dd;
       for (int i = 0; i < 2; i++) {
         ss >> param;
         if (param[1] == 'i') {
           ss >> tr_id;
         } else if (param[1] == 'd') {
-          ss >> d;
+          ss >> dd;
         }
       }
-      tr.query_train(tr_id, d);
+      if (dd[1] < '6' || dd[1] > '8') {
+        std::cout << -1 << '\n';
+      } else {
+        date d(dd);
+        tr.query_train(tr_id, d);
+      }
     }
 
     inline void handle_query_ticket() {
@@ -362,6 +379,7 @@ namespace arima_kana {
     inline void handle_query_transfer() {
       std::string param;
       station_name from, to;
+      std::string dd;
       date d;
       std::string p;
       bool is_time = true;
@@ -371,11 +389,17 @@ namespace arima_kana {
         } else if (param[1] == 't') {
           ss >> to;
         } else if (param[1] == 'd') {
-          ss >> d;
+          ss >> dd;
         } else if (param[1] == 'p') {
           ss >> p;
           if (p == "cost") is_time = false;
         }
+      }
+      if (dd[1] < '6' || dd[1] > '8') {
+        std::cout << 0 << '\n';
+        return;
+      } else {
+        d = date(dd);
       }
       try {
         tr.query_transfer(from, to, d, is_time);
