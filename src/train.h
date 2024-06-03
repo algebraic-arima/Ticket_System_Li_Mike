@@ -571,12 +571,12 @@ namespace arima_kana {
           ++i;
         }
         if (is_time) {
-          sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
+          sort(res.begin(), res.end(), [](const query_info &a, const query_info &b) {
             return a.interval < b.interval
                    || (a.interval == b.interval && a.t_id < b.t_id);
           });
         } else {
-          sort(res.begin(), res.end() - 1, [](const query_info &a, const query_info &b) {
+          sort(res.begin(), res.end(), [](const query_info &a, const query_info &b) {
             return a.price < b.price ||
                    (a.price == b.price && a.t_id < b.t_id);
           });
@@ -755,7 +755,7 @@ namespace arima_kana {
         }
 
         if (is_time) {
-          sort(result.begin(), result.end() - 1, [](const transfer_info &a, const transfer_info &b) {
+          sort(result.begin(), result.end(), [](const transfer_info &a, const transfer_info &b) {
             return a.il < b.il
                    || (a.il == b.il && a.price < b.price)
                    || (a.il == b.il && a.price == b.price && a.q1.t_id < b.q1.t_id)
@@ -763,7 +763,7 @@ namespace arima_kana {
                        a.q2.t_id < b.q2.t_id);
           });
         } else {
-          sort(result.begin(), result.end() - 1, [](const transfer_info &a, const transfer_info &b) {
+          sort(result.begin(), result.end(), [](const transfer_info &a, const transfer_info &b) {
             return a.price < b.price
                    || (a.price == b.price && a.il < b.il)
                    || (a.price == b.price && a.il == b.il && a.q1.t_id < b.q1.t_id)

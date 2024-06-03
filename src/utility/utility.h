@@ -305,6 +305,10 @@ namespace arima_kana {
         bool operator<(const iterator &rhs) {
           return ptr < rhs.ptr;
         }
+
+        int operator-(const iterator &rhs) {
+          return ptr - rhs.ptr;
+        }
       };
 
       iterator begin() {
@@ -315,19 +319,52 @@ namespace arima_kana {
         return iterator(data + _size);
       }
 
-      friend void sort(iterator l, iterator r, bool (*cmp)(const T &, const T &)) {
-        if (r < l) return;
-        iterator i = l, j = r;
-        T mid = *l;
-        while (i != j) {
-          while (i != j && !cmp(*j, mid)) j--;
-          if (i != j) std::swap(*i, *j);
-          while (i != j && cmp(*i, mid)) i++;
-          if (i != j) std::swap(*i, *j);
+//      friend void sort(iterator l, iterator r, bool (*cmp)(const T &, const T &)) {
+//        if (r < l) return;
+//        iterator i = l, j = r;
+//        T mid = *l;
+//        while (i != j) {
+//          while (i != j && !cmp(*j, mid)) j--;
+//          if (i != j) std::swap(*i, *j);
+//          while (i != j && cmp(*i, mid)) i++;
+//          if (i != j) std::swap(*i, *j);
+//        }
+//        *i = mid;
+//        sort(l, i - 1, cmp);
+//        sort(i + 1, r, cmp);
+//      }
+
+      friend void sort(iterator l, iterator r, bool(*cmp)(const T &, const T &)) {
+        if (r - l <= 1) return;
+        iterator mid = l + (r - l) / 2;
+        sort(l, mid, cmp);
+        sort(mid, r, cmp);
+        T *tmp = new T[r - l];
+        iterator i = l, j = mid, k = tmp;
+        while (i != mid && j != r) {
+          if (cmp(*i, *j)) {
+            *k = *i;
+            i++;
+          } else {
+            *k = *j;
+            j++;
+          }
+          k++;
         }
-        *i = mid;
-        sort(l, i - 1, cmp);
-        sort(i + 1, r, cmp);
+        while (i != mid) {
+          *k = *i;
+          i++;
+          k++;
+        }
+        while (j != r) {
+          *k = *j;
+          j++;
+          k++;
+        }
+        for (k = tmp, i = l; i != r; i++, k++) {
+          *i = *k;
+        }
+        delete[] tmp;
       }
 
     };
