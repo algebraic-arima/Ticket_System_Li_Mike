@@ -69,6 +69,7 @@ namespace arima_kana {
 
       bool release(const K &key) {
         pair<size_t, bool> *it = index_list.find(key);
+        if(it==nullptr) return false;
         if (it->first == 0 || it->second) {
           return false;
         }

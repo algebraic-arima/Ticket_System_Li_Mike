@@ -420,6 +420,10 @@ namespace arima_kana {
 
       void query_train(const train_id &id, const date &d) {
         TrainInfo *t = train_list.find(id);
+        if (t == nullptr) {
+          std::cout << "-1\n";
+          return;
+        }
         print_train(t, d);
       }
 
